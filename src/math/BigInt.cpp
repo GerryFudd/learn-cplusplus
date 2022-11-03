@@ -9,6 +9,9 @@ namespace std {
     };
     string BigInt::as_string() {
         string result = "";
+        if (discriminator) {
+            result += "-";
+        }
         if (magnitude_length == 1) {
             result += to_string(*magnitude_pointer);
         }
