@@ -14,9 +14,11 @@ namespace std {
             discriminator = disc;
         };
         string as_string() {
+            string result = "";
             if (magnitude_length == 1) {
-                return to_string(*magnitude_pointer);
+                result += to_string(*magnitude_pointer);
             }
-        };
+            return result;
+        }
     };
 }
