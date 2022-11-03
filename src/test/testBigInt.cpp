@@ -21,3 +21,10 @@ BOOST_AUTO_TEST_CASE(to_string_test_zero)
   BigInt test_int;
   BOOST_ASSERT(test_int.as_string() == "0");
 }
+
+BOOST_AUTO_TEST_CASE(to_string_test_large)
+{
+  BigInt test_int((unsigned int []){0, 1}, 2, false);
+  string result = test_int.as_string();
+  BOOST_TEST(result == "4294967296", result + " should equal 4294967296\n");
+}

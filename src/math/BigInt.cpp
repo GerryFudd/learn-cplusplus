@@ -2,6 +2,9 @@
 #include <math/BigInt.hpp>
 
 namespace std {
+    const unsigned int decimal_conversion_base = 1000000000;
+    const unsigned int conversion_quotient = 4;
+    const unsigned int conversion_remainder = 294967296;
     BigInt::BigInt () {
         unsigned int magnitude = 0;
         magnitude_pointer = &magnitude;
@@ -17,11 +20,37 @@ namespace std {
 
     string BigInt::as_string() {
         string result = "";
-        if (discriminator) {
-            result += "-";
+        unsigned int last_unprocessed_place = magnitude_length - 1;
+        unsigned int unprocessed_magnitude[magnitude_length];
+        for (int i = 0; i < magnitude_length; i++) {
+            unprocessed_magnitude[i] = *(magnitude_pointer + i);
         }
-        if (magnitude_length == 1) {
-            result += to_string(*magnitude_pointer);
+        unsigned int new_last_place_value, previous_remainder, current_quotient, current_remainder, current_place;
+        while (last_unprocessed_place > 0) {
+            new_last_place_value = unprocessed_magnitude[last_unprocessed_place] / decimal_conversion_base;
+            previous_remainder = unprocessed_magnitude[last_unprocessed_place] % decimal_conversion_base;
+            unprocessed_magnitude[last_unprocessed_place] = new_last_place_value;
+            current_place = last_unprocessed_place;
+            while (current_place > 0) {
+                current_place--;
+                current_quotient = unprocessed_magnitude[current_place] / decimal_conversion_base;
+                current_remainder = unprocessed_magnitude[current_place] % decimal_conversion_base;
+                unprocessed_magnitude[current_place] = previous_remainder * conversion_quotient + current_quotient
+                    + (previous_remainder * conversion_remainder + current_remainder) / decimal_conversion_base;
+                previous_remainder = (previous_remainder * conversion_remainder + current_remainder) % decimal_conversion_base;
+            }
+            result = to_string(previous_remainder) + result;
+            if (new_last_place_value == 0) {
+                last_unprocessed_place--;
+            }
+        }
+        if (unprocessed_magnitude[0] > 0) {
+            result = to_string(unprocessed_magnitude[0]) + result;
+        }
+        if (result == "") {
+            result = "0";
+        } else if (discriminator) {
+            result = "-" + result;
         }
         return result;
     }
