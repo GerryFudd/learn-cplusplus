@@ -12,7 +12,7 @@ namespace std {
     public:
         BigInt();
         BigInt (unsigned int [], unsigned int, bool);
-        string as_string();
+        string as_decimal_string();
     };
 }
 #endif

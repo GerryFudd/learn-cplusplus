@@ -18,14 +18,14 @@ namespace std {
         discriminator = disc;
     };
 
-    string BigInt::as_string() {
+    string BigInt::as_decimal_string() {
         string result = "";
         unsigned int last_unprocessed_place = magnitude_length - 1;
         unsigned int unprocessed_magnitude[magnitude_length];
         for (int i = 0; i < magnitude_length; i++) {
             unprocessed_magnitude[i] = *(magnitude_pointer + i);
         }
-        unsigned int new_last_place_value, previous_remainder, current_quotient, current_remainder, current_place;
+        unsigned long new_last_place_value, previous_remainder, current_quotient, current_remainder, current_place;
         while (last_unprocessed_place > 0) {
             new_last_place_value = unprocessed_magnitude[last_unprocessed_place] / decimal_conversion_base;
             previous_remainder = unprocessed_magnitude[last_unprocessed_place] % decimal_conversion_base;
