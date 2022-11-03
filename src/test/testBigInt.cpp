@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE BigInt test
 #include <boost/test/included/unit_test.hpp>
-#include "../math/BigInt.cpp"
+#include "math/BigInt.hpp"
 
 using namespace std;
 
