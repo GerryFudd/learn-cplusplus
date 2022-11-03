@@ -10,6 +10,7 @@ namespace std {
         // True indicates that the underlying int is negative
         bool discriminator;
     public:
+        BigInt();
         BigInt (unsigned int [], unsigned int, bool);
         string as_string();
     };

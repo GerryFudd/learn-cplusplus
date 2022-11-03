@@ -2,11 +2,19 @@
 #include <math/BigInt.hpp>
 
 namespace std {
+    BigInt::BigInt () {
+        unsigned int magnitude = 0;
+        magnitude_pointer = &magnitude;
+        magnitude_length = 1;
+        discriminator = false;
+    }
+
     BigInt::BigInt (unsigned int magnitude[], unsigned int length, bool disc) {
         magnitude_pointer = magnitude;
         magnitude_length = length;
         discriminator = disc;
     };
+
     string BigInt::as_string() {
         string result = "";
         if (discriminator) {
