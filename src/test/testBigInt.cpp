@@ -35,3 +35,10 @@ BOOST_AUTO_TEST_CASE(to_string_test_large_complex)
   string result = test_int.as_decimal_string();
   BOOST_TEST(result == "-18446744073709551615", result + " should equal -18446744073709551615\n");
 }
+
+BOOST_AUTO_TEST_CASE(to_string_test_large_with_intermediate_zeros)
+{
+  BigInt test_int((unsigned int []){1410065409, 2}, 2, false);
+  string result = test_int.as_decimal_string();
+  BOOST_TEST(result == "10000000001", result + " should equal 10000000001\n");
+}

@@ -39,7 +39,14 @@ namespace std {
                     + (previous_remainder * conversion_remainder + current_remainder) / decimal_conversion_base;
                 previous_remainder = (previous_remainder * conversion_remainder + current_remainder) % decimal_conversion_base;
             }
-            result = to_string(previous_remainder) + result;
+            string remainder_as_string = to_string(previous_remainder);
+            string leading_zeros;
+            if (remainder_as_string.length() < 9) {
+                leading_zeros = string(9 - remainder_as_string.length(), '0');
+            } else {
+                leading_zeros = "";
+            }
+            result = leading_zeros + remainder_as_string + result;
             if (new_last_place_value == 0) {
                 last_unprocessed_place--;
             }
