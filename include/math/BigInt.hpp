@@ -2,7 +2,9 @@
 #define BIGINT_DEF
 #include <string>
 
-namespace std {
+using namespace std;
+
+namespace math {
     class BigInt {
         // Pointer to unsigned int so that magnitude can be variable size
         unsigned int * magnitude_pointer;

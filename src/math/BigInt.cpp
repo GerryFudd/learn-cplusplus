@@ -1,7 +1,9 @@
 #include <string>
 #include <math/BigInt.hpp>
 
-namespace std {
+using namespace std;
+
+namespace math {
     const unsigned int decimal_conversion_base = 1000000000;
     const unsigned int conversion_quotient = 4;
     const unsigned int conversion_remainder = 294967296;

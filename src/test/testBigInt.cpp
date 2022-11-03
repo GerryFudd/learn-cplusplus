@@ -3,6 +3,7 @@
 #include "math/BigInt.hpp"
 
 using namespace std;
+using namespace math;
 
 BOOST_AUTO_TEST_CASE(to_string_test)
 {
