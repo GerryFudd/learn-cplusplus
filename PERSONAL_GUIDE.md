@@ -103,27 +103,115 @@ This creates two directories, `/usr/local/boost/include/` and `/usr/local/boost/
 
 ## Variable declaration
 
+Every variable is assigned a connected block of memory at the time it is declared. For this reason you must declare the type of the variable as it is created. You must even declare the size of compound data types.
+
+All data types in c++ have constructors. So even integers and booleans may be initialized with statements like `int a {-3};` or `bool b {false};`. It is also possible to set a variable equal to an instance of its type `int a = -3;` or `bool b = false;`. When a type has a default constructor that is implicitly called when an instance of that type is declared without an explicit value assigned or constructor call such as `int c;`.
+
+It is also possible to declare several variables of the same type separated by commas.
+
+```c++
+int a {-3}, b = 14, c(-8), d;
+```
+
+In this example `a, b, c,` and `d` are `int` type objects, `a == -3`, `b == 14`, `c == -8`, and `d` has an indeterminate value.
+
 ## Data structures
 
 ### Native
 
+`bool` is either `true` or `false` and only takes up one byte. The `byte` data type takes on the values from `-128` to `127`, but doesn't support mathematical operations.
+
 #### Numbers
 
+| class | values | bytes |
+| :--- | :----: | ---: |
+| `int` | `-(2^(31))` to `2^(31)-1` | 4 |
+| `unsigned int` | `0` to `2^(32)-1` | 4 |
+| `short` | `-(2^(15))` to `2^(15)-1` | 2 |
+| `unsigned short`| `0` to `2^(16)-1` | 2 |
+| `long` | `-(2^(63))` to `2^(63)-1` | 8 |
+| `unsigned long` | `0` to `2^(64)-1` | 8 |
+| `float` | significant digits `-(2^{23})` to `2^(23)-1` | 4 |
+|  | times `2^(-128)` to `2^(127)` | |
+| `double` | significant digits `-(2^(51))` to `2^(51)-1` | 8 |
+|  | times `2^(-1024)` to `2^(1023)` | |
+
+
 #### Text and junk
+
+`char` represents a single letter or other text symbol. This takes up one byte in memory. `wchar_t` is a character that uses two bytes and represents a symbol from a character set that doesn't fit in a single byte.
 
 ### Standard libraries
 
 #### iostream
 
+The iostream library is used for logging with the `std::cout` command and the `<<` operator. It is even possible to stream non-character data types to standard out without needing type conversions.
+
+```c++
+int a {-3}, b = 47;
+
+std::cout << a << " > " << b << " is a " 
+    << (a > b) << " statement.";
+// -3 > 47 is a false statement.
+```
+
 #### string
+
+The `string` data type is part of the `<string>` library. This library also has the useful `std::to_string` method that converts other types to strings. Strings may also be added with the `+` operator.
+
+The string type also has useful helper methods `std::string::c_str`, which converts the string to the type used in exception messages, and `std::string::length`, which returns the number of characters in the string.
 
 #### exception
 
-#### algorithm
+The `<exception>` class has a virtual method `std::exception::what` that returns the exception message. You may provide concrete exception classes extend this and use them in `try { } catch( ) { }` blocks. You can use any type in your catch blocks, but it is best to use classes that extend `exception`. If the classes `FooException` and `BarException` both extend `exception`, then the following block will log a `FooException` message in the first block and will log a generic message when a `BarException` is caught in the second block.
+
+```c++
+try {
+    //... do stuff
+} catch(FooException fooEx) {
+    std::cout << fooEx.what() << std::endl;
+} catch(exception e) {
+    std::cout << "An unexpected exception was encountered" << std::endl;
+}
+```
+
+When a `catch` block contains an ellipsis, it will catch anything.
+
+```c++
+try {
+    // ... do stuff
+} catch (...) {
+    std::cout << "Something was thrown." << std::endl;
+}
+```
+
+## Pointers
+
+A pointer is a one byte number that points to an address in memory. Pointers are declared as a reference to a specific data type so the variable they point to must be the declared type. An `*` in front of a pointer returns the variable that is stored int the address the pointer points to. A pointer is declared as `${type} * ${name}`. An `&` in front of a variable returns the variable's address in memory. If the variable takes up multiple bytes, this returns the address of the first byte.
+
+```c++
+int a = -43;
+int * b = &a;
+int c = *b;
+int * d = &c;
+```
+
+In this example `b != d` but `*b == *d`. 
 
 ## Functions
 
-## Pointers
+A function is declared with a return type and a collection of arguments. This is a function that returns the first index of the given character in the given string or -1 if the character is missing.
+
+```c++
+int index_of(std::string a, char b) {
+    for (int i = 0; i < a.length(); i++) {
+        if (a[i] == b) {
+            return i;
+        }
+    }
+    return -1;
+}
+```
 
 ### Arrays
 
