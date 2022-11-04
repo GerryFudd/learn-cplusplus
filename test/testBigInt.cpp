@@ -43,3 +43,11 @@ BOOST_AUTO_TEST_CASE(to_string_test_large_with_intermediate_zeros)
   string result = test_int.as_decimal_string();
   BOOST_TEST(result == "10000000001", result + " should equal 10000000001\n");
 }
+
+BOOST_AUTO_TEST_CASE(simple_sum)
+{
+  BigInt a((unsigned int []){56}, 1, false), b((unsigned int []){109}, 1, false);
+  BigInt result;
+  result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){165}, 1, false)), result.as_decimal_string() + " should equal 165\n");
+}

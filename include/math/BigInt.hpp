@@ -15,6 +15,17 @@ namespace math {
         BigInt();
         BigInt (unsigned int [], unsigned int, bool);
         string as_decimal_string();
+        BigInt operator + (const BigInt&);
+        bool equals (const BigInt&);
+    };
+
+
+
+    class NotImplemented: public exception {
+        const char * message;
+    public:
+        NotImplemented(string);
+        virtual const char * what();
     };
 }
 #endif
