@@ -16,6 +16,7 @@ namespace math {
         BigInt (unsigned int [], unsigned short, bool);
         string as_decimal_string();
         BigInt operator + (const BigInt&);
+        BigInt operator - (const BigInt&);
         bool equals (const BigInt&);
     };
 

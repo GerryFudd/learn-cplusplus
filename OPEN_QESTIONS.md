@@ -4,6 +4,7 @@ The WTF items that are going to be key for completing this project.
 
 1. How and when do you need to implement destructors for classes?
 1. How do classes relate to one another (inheritance, friendship?!, are there interfaces?)?
+1. How do you generate a stack trace as part of an exception?
 1. Is it possible to implement a callback or a future task?
 1. How does file io work?
 1. How do you manage threads?

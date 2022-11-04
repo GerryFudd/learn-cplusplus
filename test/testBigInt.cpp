@@ -71,3 +71,10 @@ BOOST_AUTO_TEST_CASE(sum_with_multiple_blocks_and_overflow)
   BigInt result = a + b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x1}, 3, false)), result.as_decimal_string() + " should equal 18466831181568410402\n");
 }
+
+BOOST_AUTO_TEST_CASE(sum_with_opposite_signs)
+{
+  BigInt a((unsigned int []){14}, 1, true), b((unsigned int []){11}, 1, false);
+  BigInt result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){3}, 1, true)), result.as_decimal_string() + " should equal -3\n");
+}

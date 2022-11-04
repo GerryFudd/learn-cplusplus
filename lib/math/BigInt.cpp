@@ -116,7 +116,7 @@ namespace math {
         // }
     BigInt BigInt::operator+ (const BigInt& other) {
         if (sign != other.sign) {
-            throw new NotImplemented("opposite signs.");
+            return (*this) - BigInt(other.magnitude_pointer, other.magnitude_length, sign);
         }
 
         unsigned int overflow = 0, next_value = 0;
@@ -142,5 +142,127 @@ namespace math {
             result_length++;
         }
         return BigInt(result_magnitude, result_length, sign);
+    }
+
+    BigInt BigInt::operator- (const BigInt& other) {
+        if (sign != other.sign) {
+            return *this + BigInt(other.magnitude_pointer, other.magnitude_length, sign);
+        }
+        bool this_has_larger_magnitude;
+        if (magnitude_length == other.magnitude_length) {
+            unsigned short comparison_index = magnitude_length - 1;
+            while (*(magnitude_pointer + comparison_index) == *(other.magnitude_pointer + comparison_index))
+            {
+                if (comparison_index == 0) {
+                    // The values are equal so their sum is zero
+                    return BigInt();
+                }
+                comparison_index--;
+            }
+
+            
+            this_has_larger_magnitude = *(magnitude_pointer + comparison_index) > *(other.magnitude_pointer + comparison_index);
+        } else {
+            this_has_larger_magnitude = magnitude_length > other.magnitude_length;
+        }
+        bool result_sign;
+        if (this_has_larger_magnitude) {
+            result_sign = sign;
+        } else {
+            result_sign = !sign;
+        }
+        unsigned short cursor = 0;
+        unsigned short result_length = 0;
+        unsigned int result_magnitude[magnitude_length];
+        unsigned int current_larger, current_smaller;
+        bool overflow = false, current_overflow;
+        BigInt larger, smaller;
+        if (this_has_larger_magnitude) {
+            larger = *this;
+            smaller = other;
+        } else {
+            larger = other;
+            smaller = *this;
+        }
+        /*
+            Example: 49 - 107 if place values are all mod 10
+            larger = 107
+            smaller = 49
+            result_magnitude = [0, 0, 0]
+
+            iter 1
+            cursor = 0
+            result_length = 0
+            overflow = false
+
+            current_larger = 7
+            current_smaller = 9
+            current_overflow = true
+            result_magnitude = [8, 0, 0]
+
+            iter 2
+            cursor = 1
+            result_length = 1
+            overflow = true
+
+            current_overflow = true
+            current_larger = 9
+            current_smaller = 4
+            result_magnitude = [8, 5, 0]
+
+            iter 3
+            cursor = 2
+            result_length = 2
+            overflow = true
+
+            current_larger = 0
+            current_smaller = 0
+            current_overflow = false
+            result_magnitude = [8, 5, 0]
+
+            while loop terminates
+
+            result_magnitude = [8, 5, 0]
+            result_length = 2
+
+            return BigInt([8, 5, 0], 2, true)
+        */
+        while (cursor < magnitude_length || cursor < other.magnitude_length || overflow)
+        {
+            // Initialize loop iteration values
+
+            // Larger will always have a value at this index
+            current_larger = *(larger.magnitude_pointer + cursor);
+            current_overflow = false;
+            if (overflow) {
+                if (current_larger == 0) {
+                    current_overflow = true;
+                }
+                current_larger--;
+            }
+            if (cursor < smaller.magnitude_length) {
+                current_smaller = *(smaller.magnitude_pointer + cursor);
+            } else {
+                current_smaller = 0;
+            }
+
+            // Do iteration work
+            if (current_larger >= current_smaller) {
+                result_magnitude[cursor] = current_larger - current_smaller;
+            } else {
+                // modular arithmetic FTW!
+                result_magnitude[cursor] = current_larger - current_smaller;
+                current_overflow = true;
+            }
+            if (result_magnitude[cursor] != 0) {
+                result_length = cursor + 1;
+            }
+
+            // Prepare for next iteration
+            overflow = current_overflow;
+            cursor++;
+        }
+        
+        return BigInt(result_magnitude, result_length, result_sign);
     }
 }
