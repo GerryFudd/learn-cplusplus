@@ -64,3 +64,10 @@ BOOST_AUTO_TEST_CASE(sum_with_overflow)
   BigInt result = a + b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){0, 1}, 2, false)), result.as_decimal_string() + " should equal 4294967296\n");
 }
+
+BOOST_AUTO_TEST_CASE(sum_with_multiple_blocks_and_overflow)
+{
+  BigInt a((unsigned int []){0x80700230, 0xa0475d1e}, 2, false), b((unsigned int []){0xc00e00f2, 0x5fffffff}, 2, false);
+  BigInt result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x1}, 3, false)), result.as_decimal_string() + " should equal 18466831181568410402\n");
+}
