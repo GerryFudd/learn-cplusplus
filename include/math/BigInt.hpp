@@ -8,12 +8,12 @@ namespace math {
     class BigInt {
         // Pointer to unsigned int so that magnitude can be variable size
         unsigned int * magnitude_pointer;
-        unsigned int magnitude_length;
+        unsigned short magnitude_length;
         // True indicates that the underlying int is negative
         bool sign;
     public:
         BigInt();
-        BigInt (unsigned int [], unsigned int, bool);
+        BigInt (unsigned int [], unsigned short, bool);
         string as_decimal_string();
         BigInt operator + (const BigInt&);
         bool equals (const BigInt&);

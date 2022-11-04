@@ -47,7 +47,20 @@ BOOST_AUTO_TEST_CASE(to_string_test_large_with_intermediate_zeros)
 BOOST_AUTO_TEST_CASE(simple_sum)
 {
   BigInt a((unsigned int []){56}, 1, false), b((unsigned int []){109}, 1, false);
-  BigInt result;
-  result = a + b;
+  BigInt result = a + b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){165}, 1, false)), result.as_decimal_string() + " should equal 165\n");
+}
+
+BOOST_AUTO_TEST_CASE(negative_number_sum)
+{
+  BigInt a((unsigned int []){56}, 1, true), b((unsigned int []){109}, 1, true);
+  BigInt result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){165}, 1, true)), result.as_decimal_string() + " should equal -165\n");
+}
+
+BOOST_AUTO_TEST_CASE(sum_with_overflow)
+{
+  BigInt a((unsigned int []){0x80000000}, 1, false), b((unsigned int []){0x80000000}, 1, false);
+  BigInt result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){0, 1}, 2, false)), result.as_decimal_string() + " should equal 4294967296\n");
 }

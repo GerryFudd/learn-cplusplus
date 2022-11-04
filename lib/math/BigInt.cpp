@@ -27,7 +27,7 @@ namespace math {
         sign = false;
     }
 
-    BigInt::BigInt (unsigned int magnitude[], unsigned int length, bool sgn) {
+    BigInt::BigInt (unsigned int magnitude[], unsigned short length, bool sgn) {
         magnitude_pointer = new unsigned int [length];
         for (int i = 0; i < length; i++) {
             magnitude_pointer[i] = magnitude[i];
@@ -38,7 +38,7 @@ namespace math {
 
     string BigInt::as_decimal_string() {
         string result = "";
-        unsigned int last_unprocessed_place = magnitude_length - 1;
+        unsigned short last_unprocessed_place = magnitude_length - 1;
         unsigned int unprocessed_magnitude[magnitude_length];
         for (int i = 0; i < magnitude_length; i++) {
             unprocessed_magnitude[i] = *(magnitude_pointer + i);
@@ -119,21 +119,27 @@ namespace math {
             throw new NotImplemented("opposite signs.");
         }
 
-        unsigned long current_sum;
         unsigned int overflow = 0, next_value = 0;
-        unsigned short result_length = max(magnitude_length, other.magnitude_length);
-        unsigned int result_magnitude[result_length];
-        for (int i = 0; i < max(magnitude_length, other.magnitude_length); i++) {
-            current_sum = overflow;
-            if (i < magnitude_length) {
-                current_sum += *(magnitude_pointer + i);
+        unsigned short result_length = 0;
+
+        unsigned int result_magnitude[max(magnitude_length, other.magnitude_length) + 1];
+
+        while (result_length < magnitude_length || result_length < other.magnitude_length || overflow > 0) {
+            unsigned long current_sum = current_sum = overflow;
+            if (result_length < magnitude_length) {
+                current_sum += *(magnitude_pointer + result_length);
             }
-            if (i < other.magnitude_length) {
-                current_sum += *(other.magnitude_pointer + i);
+            if (result_length < other.magnitude_length) {
+                current_sum += *(other.magnitude_pointer + result_length);
             }
             overflow = current_sum / 0x100000000;
             next_value = current_sum % 0x100000000;
-            result_magnitude[i] = next_value;
+            result_magnitude[result_length] = next_value;
+            result_length++;
+        }
+        if (overflow > 0) {
+            result_magnitude[result_length] = overflow;
+            result_length++;
         }
         return BigInt(result_magnitude, result_length, sign);
     }
