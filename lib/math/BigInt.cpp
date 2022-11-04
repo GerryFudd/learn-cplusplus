@@ -21,8 +21,8 @@ namespace math {
     const unsigned int conversion_quotient = 0x4;
     const unsigned int conversion_remainder = 0x1194d800; 
     BigInt::BigInt () {
-        unsigned int magnitude = 0;
-        magnitude_pointer = &magnitude;
+        magnitude_pointer = new unsigned int [1];
+        magnitude_pointer[0] = 0;
         magnitude_length = 1;
         sign = false;
     }
@@ -35,6 +35,10 @@ namespace math {
         magnitude_length = length;
         sign = sgn;
     };
+
+    BigInt::~BigInt () {
+        delete []magnitude_pointer;
+    }
 
     string BigInt::as_decimal_string() {
         string result = "";
@@ -96,41 +100,20 @@ namespace math {
         return true;
     }
 
-
-        // public BigInteger add(BigInteger val) {
-        //     if (val.signum == 0)
-        //         return this;
-        //     if (signum == 0)
-        //         return val;
-        //     if (val.signum == signum)
-        //         return new BigInteger(add(mag, val.mag), signum);
-
-        //     int cmp = compareMagnitude(val);
-        //     if (cmp == 0)
-        //         return ZERO;
-        //     int[] resultMag = (cmp > 0 ? subtract(mag, val.mag)
-        //                         : subtract(val.mag, mag));
-        //     resultMag = trustedStripLeadingZeroInts(resultMag);
-
-        //     return new BigInteger(resultMag, cmp == signum ? 1 : -1);
-        // }
-    BigInt BigInt::operator+ (const BigInt& other) {
-        if (sign != other.sign) {
-            return (*this) - BigInt(other.magnitude_pointer, other.magnitude_length, sign);
-        }
+    BigInt BigInt::do_add(unsigned int * other_magnitude, unsigned short other_length) {
 
         unsigned int overflow = 0, next_value = 0;
         unsigned short result_length = 0;
 
-        unsigned int result_magnitude[max(magnitude_length, other.magnitude_length) + 1];
+        unsigned int result_magnitude[max(magnitude_length, other_length) + 1];
 
-        while (result_length < magnitude_length || result_length < other.magnitude_length || overflow > 0) {
+        while (result_length < magnitude_length || result_length < other_length || overflow > 0) {
             unsigned long current_sum = current_sum = overflow;
             if (result_length < magnitude_length) {
                 current_sum += *(magnitude_pointer + result_length);
             }
-            if (result_length < other.magnitude_length) {
-                current_sum += *(other.magnitude_pointer + result_length);
+            if (result_length < other_length) {
+                current_sum += *(other_magnitude + result_length);
             }
             overflow = current_sum / 0x100000000;
             next_value = current_sum % 0x100000000;
@@ -142,16 +125,14 @@ namespace math {
             result_length++;
         }
         return BigInt(result_magnitude, result_length, sign);
+
     }
 
-    BigInt BigInt::operator- (const BigInt& other) {
-        if (sign != other.sign) {
-            return *this + BigInt(other.magnitude_pointer, other.magnitude_length, sign);
-        }
+    BigInt BigInt::do_sub(unsigned int * other_magnitude, unsigned short other_length) {
         bool this_has_larger_magnitude;
-        if (magnitude_length == other.magnitude_length) {
+        if (magnitude_length == other_length) {
             unsigned short comparison_index = magnitude_length - 1;
-            while (*(magnitude_pointer + comparison_index) == *(other.magnitude_pointer + comparison_index))
+            while (*(magnitude_pointer + comparison_index) == *(other_magnitude + comparison_index))
             {
                 if (comparison_index == 0) {
                     // The values are equal so their sum is zero
@@ -161,9 +142,9 @@ namespace math {
             }
 
             
-            this_has_larger_magnitude = *(magnitude_pointer + comparison_index) > *(other.magnitude_pointer + comparison_index);
+            this_has_larger_magnitude = *(magnitude_pointer + comparison_index) > *(other_magnitude + comparison_index);
         } else {
-            this_has_larger_magnitude = magnitude_length > other.magnitude_length;
+            this_has_larger_magnitude = magnitude_length > other_length;
         }
         bool result_sign;
         if (this_has_larger_magnitude) {
@@ -176,13 +157,19 @@ namespace math {
         unsigned int result_magnitude[magnitude_length];
         unsigned int current_larger, current_smaller;
         bool overflow = false, current_overflow;
-        BigInt larger, smaller;
+        unsigned int * larger_mag, * smaller_mag;
+        unsigned short larger_len, smaller_len;
         if (this_has_larger_magnitude) {
-            larger = *this;
-            smaller = other;
+            larger_mag = magnitude_pointer;
+            larger_len = magnitude_length;
+            smaller_mag = other_magnitude;
+            smaller_len = other_length;
         } else {
-            larger = other;
-            smaller = *this;
+            larger_mag = other_magnitude;
+            larger_len = other_length;
+
+            smaller_mag = magnitude_pointer;
+            smaller_len = magnitude_length;
         }
         /*
             Example: 49 - 107 if place values are all mod 10
@@ -227,12 +214,12 @@ namespace math {
 
             return BigInt([8, 5, 0], 2, true)
         */
-        while (cursor < magnitude_length || cursor < other.magnitude_length || overflow)
+        while (cursor < magnitude_length || cursor < other_length || overflow)
         {
             // Initialize loop iteration values
 
             // Larger will always have a value at this index
-            current_larger = *(larger.magnitude_pointer + cursor);
+            current_larger = *(larger_mag + cursor);
             current_overflow = false;
             if (overflow) {
                 if (current_larger == 0) {
@@ -240,8 +227,8 @@ namespace math {
                 }
                 current_larger--;
             }
-            if (cursor < smaller.magnitude_length) {
-                current_smaller = *(smaller.magnitude_pointer + cursor);
+            if (cursor < smaller_len) {
+                current_smaller = *(smaller_mag + cursor);
             } else {
                 current_smaller = 0;
             }
@@ -264,5 +251,38 @@ namespace math {
         }
         
         return BigInt(result_magnitude, result_length, result_sign);
+
+    }
+
+
+        // public BigInteger add(BigInteger val) {
+        //     if (val.signum == 0)
+        //         return this;
+        //     if (signum == 0)
+        //         return val;
+        //     if (val.signum == signum)
+        //         return new BigInteger(add(mag, val.mag), signum);
+
+        //     int cmp = compareMagnitude(val);
+        //     if (cmp == 0)
+        //         return ZERO;
+        //     int[] resultMag = (cmp > 0 ? subtract(mag, val.mag)
+        //                         : subtract(val.mag, mag));
+        //     resultMag = trustedStripLeadingZeroInts(resultMag);
+
+        //     return new BigInteger(resultMag, cmp == signum ? 1 : -1);
+        // }
+    BigInt BigInt::operator+ (const BigInt& other) {
+        if (sign != other.sign) {
+            return do_sub(other.magnitude_pointer, other.magnitude_length);
+        }
+        return do_add(other.magnitude_pointer, other.magnitude_length);
+    }
+
+    BigInt BigInt::operator- (const BigInt& other) {
+        if (sign != other.sign) {
+            return do_add(other.magnitude_pointer, other.magnitude_length);
+        }
+        return do_sub(other.magnitude_pointer, other.magnitude_length);
     }
 }

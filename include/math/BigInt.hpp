@@ -11,8 +11,11 @@ namespace math {
         unsigned short magnitude_length;
         // True indicates that the underlying int is negative
         bool sign;
+        BigInt do_add(unsigned int *, unsigned short);
+        BigInt do_sub(unsigned int *, unsigned short);
     public:
         BigInt();
+        ~BigInt();
         BigInt (unsigned int [], unsigned short, bool);
         string as_decimal_string();
         BigInt operator + (const BigInt&);
