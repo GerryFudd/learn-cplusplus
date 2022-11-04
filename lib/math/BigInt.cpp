@@ -24,16 +24,16 @@ namespace math {
         unsigned int magnitude = 0;
         magnitude_pointer = &magnitude;
         magnitude_length = 1;
-        discriminator = false;
+        sign = false;
     }
 
-    BigInt::BigInt (unsigned int magnitude[], unsigned int length, bool disc) {
+    BigInt::BigInt (unsigned int magnitude[], unsigned int length, bool sgn) {
         magnitude_pointer = new unsigned int [length];
         for (int i = 0; i < length; i++) {
             magnitude_pointer[i] = magnitude[i];
         }
         magnitude_length = length;
-        discriminator = disc;
+        sign = sgn;
     };
 
     string BigInt::as_decimal_string() {
@@ -74,14 +74,14 @@ namespace math {
         }
         if (result == "") {
             result = "0";
-        } else if (discriminator) {
+        } else if (sign) {
             result = "-" + result;
         }
         return result;
     }
 
     bool BigInt::equals (const BigInt& other) {
-        if (discriminator != other.discriminator) {
+        if (sign != other.sign) {
             return false;
         }
 
@@ -115,7 +115,7 @@ namespace math {
         //     return new BigInteger(resultMag, cmp == signum ? 1 : -1);
         // }
     BigInt BigInt::operator+ (const BigInt& other) {
-        if (discriminator != other.discriminator) {
+        if (sign != other.sign) {
             throw new NotImplemented("opposite signs.");
         }
 
@@ -135,6 +135,6 @@ namespace math {
             next_value = current_sum % 0x100000000;
             result_magnitude[i] = next_value;
         }
-        return BigInt(result_magnitude, result_length, discriminator);
+        return BigInt(result_magnitude, result_length, sign);
     }
 }

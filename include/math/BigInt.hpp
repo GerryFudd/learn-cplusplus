@@ -10,7 +10,7 @@ namespace math {
         unsigned int * magnitude_pointer;
         unsigned int magnitude_length;
         // True indicates that the underlying int is negative
-        bool discriminator;
+        bool sign;
     public:
         BigInt();
         BigInt (unsigned int [], unsigned int, bool);
