@@ -2,5 +2,6 @@
 .vscode
 *.iml
 *.dSYM
+*.out
 main
 build

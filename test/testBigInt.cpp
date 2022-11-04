@@ -8,19 +8,19 @@ using namespace math;
 BOOST_AUTO_TEST_CASE(to_string_test)
 {
   BigInt test_int((unsigned int []) { 4789 }, 1, false);
-  BOOST_ASSERT(test_int.as_decimal_string() == "4789");
+  BOOST_TEST(test_int.as_decimal_string() == "4789");
 }
 
 BOOST_AUTO_TEST_CASE(to_string_test_negative)
 {
   BigInt test_int((unsigned int []) { 4789 }, 1, true);
-  BOOST_ASSERT(test_int.as_decimal_string() == "-4789");
+  BOOST_TEST(test_int.as_decimal_string() == "-4789");
 }
 
 BOOST_AUTO_TEST_CASE(to_string_test_zero)
 {
   BigInt test_int;
-  BOOST_ASSERT(test_int.as_decimal_string() == "0");
+  BOOST_TEST(test_int.as_decimal_string() == "0");
 }
 
 BOOST_AUTO_TEST_CASE(to_string_test_large)
