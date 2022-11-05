@@ -72,6 +72,13 @@ BOOST_AUTO_TEST_CASE(sum_with_multiple_blocks_and_overflow)
   BOOST_TEST(result.equals(BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x1}, 3, false)), result.as_decimal_string() + " should equal 18466831181568410402\n");
 }
 
+BOOST_AUTO_TEST_CASE(sum_with_several_orders_of_magnitude)
+{
+  BigInt a((unsigned int []){0x80700230, 0xa0475d1e, 0x43875002, 0x213}, 4, false), b((unsigned int []){0xc00e00f2, 0x5fffffff}, 2, false);
+  BigInt result = a + b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x43875003, 0x213}, 4, false)), result.as_decimal_string() + " should equal 18466831181568410402\n");
+}
+
 BOOST_AUTO_TEST_CASE(sum_with_opposite_signs)
 {
   BigInt a((unsigned int []){14}, 1, true), b((unsigned int []){11}, 1, false);
@@ -91,4 +98,11 @@ BOOST_AUTO_TEST_CASE(subtract_with_multiple_blocks)
   BigInt a((unsigned int []){0x2473, 0x7429, 0x0, 0x2}, 4, false), b((unsigned int []){0x824, 0xffffffff}, 2, false);
   BigInt result = a - b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){0x1c4f, 0x742a, 0xffffffff, 0x1}, 4, false)), result.as_decimal_string() + " should equal 158456325010082058837115804751\n");
+}
+
+BOOST_AUTO_TEST_CASE(subtract_with_several_orders_of_magnitude_difference)
+{
+  BigInt a((unsigned int []){0x2473, 0x7429, 0x0, 0x2}, 4, false), b((unsigned int []){0x824, 0x3a10}, 2, false);
+  BigInt result = a - b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){0x1c4f, 0x3a19, 0x0, 0x2}, 4, false)), result.as_decimal_string() + " should equal 158456325010082058837115804751\n");
 }

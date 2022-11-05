@@ -19,8 +19,7 @@ namespace math {
 
     const unsigned int decimal_conversion_base = 1000000000;
     const unsigned int conversion_quotient = 0x4;
-    const unsigned int conversion_remainder = 0x1194d800; 
-    const unsigned long LONG_MASK = 0x00000000ffffffff;
+    const unsigned int conversion_remainder = 0x1194d800;
 
     BigInt::BigInt () {
         magnitude_pointer = new unsigned int [1];
@@ -122,12 +121,13 @@ namespace math {
 
 
         while (cursor < smaller_length) {
-            current_sum = (*(magnitude_pointer + cursor) & LONG_MASK) + (*(other_magnitude + cursor) & LONG_MASK) + (current_sum >> 32);
+            current_sum = ((unsigned long)*(magnitude_pointer + cursor)) + ((unsigned long)*(other_magnitude + cursor)) + (current_sum >> 32);
             result_magnitude[cursor] = (unsigned int) current_sum;
             cursor++;
         }
         while (cursor < larger_length) {
-            current_sum = (*(larger_mag + cursor) & LONG_MASK) + (current_sum >> 32);
+            current_sum = ((unsigned long)*(larger_mag + cursor)) + (current_sum >> 32);
+            result_magnitude[cursor] = (unsigned int) current_sum;
             cursor++;
         }
 
