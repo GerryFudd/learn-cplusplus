@@ -20,6 +20,8 @@ namespace math {
     const unsigned int decimal_conversion_base = 1000000000;
     const unsigned int conversion_quotient = 0x4;
     const unsigned int conversion_remainder = 0x1194d800; 
+    const unsigned long LONG_MASK = 0x00000000ffffffff;
+
     BigInt::BigInt () {
         magnitude_pointer = new unsigned int [1];
         magnitude_pointer[0] = 0;
@@ -101,76 +103,47 @@ namespace math {
     }
 
     BigInt BigInt::do_add(unsigned int * other_magnitude, unsigned short other_length) {
-
-        unsigned int overflow = 0, next_value = 0;
-        unsigned short result_length = 0;
-
-        unsigned int result_magnitude[max(magnitude_length, other_length) + 1];
-
-        while (result_length < magnitude_length || result_length < other_length || overflow > 0) {
-            unsigned long current_sum = current_sum = overflow;
-            if (result_length < magnitude_length) {
-                current_sum += *(magnitude_pointer + result_length);
-            }
-            if (result_length < other_length) {
-                current_sum += *(other_magnitude + result_length);
-            }
-            overflow = current_sum / 0x100000000;
-            next_value = current_sum % 0x100000000;
-            result_magnitude[result_length] = next_value;
-            result_length++;
-        }
-        if (overflow > 0) {
-            result_magnitude[result_length] = overflow;
-            result_length++;
-        }
-        return BigInt(result_magnitude, result_length, sign);
-
-    }
-
-    BigInt BigInt::do_sub(unsigned int * other_magnitude, unsigned short other_length) {
-        bool this_has_larger_magnitude;
-        if (magnitude_length == other_length) {
-            unsigned short comparison_index = magnitude_length - 1;
-            while (*(magnitude_pointer + comparison_index) == *(other_magnitude + comparison_index))
-            {
-                if (comparison_index == 0) {
-                    // The values are equal so their sum is zero
-                    return BigInt();
-                }
-                comparison_index--;
-            }
-
-            
-            this_has_larger_magnitude = *(magnitude_pointer + comparison_index) > *(other_magnitude + comparison_index);
-        } else {
-            this_has_larger_magnitude = magnitude_length > other_length;
-        }
-        bool result_sign;
-        if (this_has_larger_magnitude) {
-            result_sign = sign;
-        } else {
-            result_sign = !sign;
-        }
-        unsigned short cursor = 0;
-        unsigned short result_length = 0;
-        unsigned int result_magnitude[magnitude_length];
-        unsigned int current_larger, current_smaller;
-        bool overflow = false, current_overflow;
-        unsigned int * larger_mag, * smaller_mag;
-        unsigned short larger_len, smaller_len;
-        if (this_has_larger_magnitude) {
+        unsigned int * larger_mag;
+        unsigned short larger_length, smaller_length;
+        if (magnitude_length > other_length) {
             larger_mag = magnitude_pointer;
-            larger_len = magnitude_length;
-            smaller_mag = other_magnitude;
-            smaller_len = other_length;
+            larger_length = magnitude_length;
+
+            smaller_length = other_length;
         } else {
             larger_mag = other_magnitude;
-            larger_len = other_length;
+            larger_length = other_length;
 
-            smaller_mag = magnitude_pointer;
-            smaller_len = magnitude_length;
+            smaller_length = magnitude_length;
         }
+        unsigned int result_magnitude[larger_length + 1];
+        unsigned long current_sum = 0;
+        unsigned short cursor = 0;
+
+
+        while (cursor < smaller_length) {
+            current_sum = (*(magnitude_pointer + cursor) & LONG_MASK) + (*(other_magnitude + cursor) & LONG_MASK) + (current_sum >> 32);
+            result_magnitude[cursor] = (unsigned int) current_sum;
+            cursor++;
+        }
+        while (cursor < larger_length) {
+            current_sum = (*(larger_mag + cursor) & LONG_MASK) + (current_sum >> 32);
+            cursor++;
+        }
+
+        if ((current_sum >> 32) > 0) {
+            result_magnitude[cursor] = 1;
+            cursor++;
+        }
+        return BigInt(result_magnitude, cursor, sign);
+    }
+    
+    BigInt BigInt::sub_from_larger(unsigned int * larger_mag, unsigned short larger_len, unsigned int * smaller_mag, unsigned short smaller_len, bool sign) {
+        unsigned short cursor = 0;
+        unsigned short result_length = 0;
+        unsigned int result_magnitude[larger_len];
+        unsigned int current_larger, current_smaller;
+        bool overflow = false, current_overflow;
         /*
             Example: 49 - 107 if place values are all mod 10
             larger = 107
@@ -214,7 +187,7 @@ namespace math {
 
             return BigInt([8, 5, 0], 2, true)
         */
-        while (cursor < magnitude_length || cursor < other_length || overflow)
+        while (cursor < larger_len || overflow)
         {
             // Initialize loop iteration values
 
@@ -250,28 +223,33 @@ namespace math {
             cursor++;
         }
         
-        return BigInt(result_magnitude, result_length, result_sign);
-
+        return BigInt(result_magnitude, result_length, sign);
     }
 
+    BigInt BigInt::do_sub(unsigned int * other_magnitude, unsigned short other_length) {
+        bool this_has_larger_magnitude;
+        if (magnitude_length == other_length) {
+            unsigned short comparison_index = magnitude_length - 1;
+            while (*(magnitude_pointer + comparison_index) == *(other_magnitude + comparison_index))
+            {
+                if (comparison_index == 0) {
+                    // The values are equal so their sum is zero
+                    return BigInt();
+                }
+                comparison_index--;
+            }
 
-        // public BigInteger add(BigInteger val) {
-        //     if (val.signum == 0)
-        //         return this;
-        //     if (signum == 0)
-        //         return val;
-        //     if (val.signum == signum)
-        //         return new BigInteger(add(mag, val.mag), signum);
+            
+            this_has_larger_magnitude = *(magnitude_pointer + comparison_index) > *(other_magnitude + comparison_index);
+        } else {
+            this_has_larger_magnitude = magnitude_length > other_length;
+        }
+        if (this_has_larger_magnitude) {
+            return BigInt::sub_from_larger(magnitude_pointer, magnitude_length, other_magnitude, other_length, sign);
+        }
+        return BigInt::sub_from_larger(other_magnitude, other_length, magnitude_pointer, magnitude_length, !sign);
+    }
 
-        //     int cmp = compareMagnitude(val);
-        //     if (cmp == 0)
-        //         return ZERO;
-        //     int[] resultMag = (cmp > 0 ? subtract(mag, val.mag)
-        //                         : subtract(val.mag, mag));
-        //     resultMag = trustedStripLeadingZeroInts(resultMag);
-
-        //     return new BigInteger(resultMag, cmp == signum ? 1 : -1);
-        // }
     BigInt BigInt::operator+ (const BigInt& other) {
         if (sign != other.sign) {
             return do_sub(other.magnitude_pointer, other.magnitude_length);

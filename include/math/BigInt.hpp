@@ -13,6 +13,7 @@ namespace math {
         bool sign;
         BigInt do_add(unsigned int *, unsigned short);
         BigInt do_sub(unsigned int *, unsigned short);
+        static BigInt sub_from_larger(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
     public:
         BigInt();
         ~BigInt();
