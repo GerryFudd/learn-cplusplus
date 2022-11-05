@@ -78,3 +78,17 @@ BOOST_AUTO_TEST_CASE(sum_with_opposite_signs)
   BigInt result = a + b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){3}, 1, true)), result.as_decimal_string() + " should equal -3\n");
 }
+
+BOOST_AUTO_TEST_CASE(subtract_with_opposite_signs)
+{
+  BigInt a((unsigned int []){38}, 1, true), b((unsigned int []){22}, 1, false);
+  BigInt result = a - b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){60}, 1, true)), result.as_decimal_string() + " should equal -60\n");
+}
+
+BOOST_AUTO_TEST_CASE(subtract_with_multiple_blocks)
+{
+  BigInt a((unsigned int []){0x2473, 0x7429, 0x0, 0x2}, 4, false), b((unsigned int []){0x824, 0xffffffff}, 2, false);
+  BigInt result = a - b;
+  BOOST_TEST(result.equals(BigInt((unsigned int []){0x1c4f, 0x742a, 0xffffffff, 0x1}, 4, false)), result.as_decimal_string() + " should equal 158456325010082058837115804751\n");
+}
