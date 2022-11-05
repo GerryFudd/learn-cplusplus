@@ -1,0 +1,263 @@
+// // Comparison Operations
+
+// /**
+//  * Compares this BigInteger with the specified BigInteger.  This
+//  * method is provided in preference to individual methods for each
+//  * of the six boolean comparison operators ({@literal <}, ==,
+//  * {@literal >}, {@literal >=}, !=, {@literal <=}).  The suggested
+//  * idiom for performing these comparisons is: {@code
+//  * (x.compareTo(y)} &lt;<i>op</i>&gt; {@code 0)}, where
+//  * &lt;<i>op</i>&gt; is one of the six comparison operators.
+//  *
+//  * @param  val BigInteger to which this BigInteger is to be compared.
+//  * @return -1, 0 or 1 as this BigInteger is numerically less than, equal
+//  *         to, or greater than {@code val}.
+//  */
+// public int compareTo(BigInteger val) {
+//     if (signum == val.signum) {
+//         switch (signum) {
+//         case 1:
+//             return compareMagnitude(val);
+//         case -1:
+//             return val.compareMagnitude(this);
+//         default:
+//             return 0;
+//         }
+//     }
+//     return signum > val.signum ? 1 : -1;
+// }
+
+// /**
+//  * Compares the magnitude array of this BigInteger with the specified
+//  * BigInteger's. This is the version of compareTo ignoring sign.
+//  *
+//  * @param val BigInteger whose magnitude array to be compared.
+//  * @return -1, 0 or 1 as this magnitude array is less than, equal to or
+//  *         greater than the magnitude aray for the specified BigInteger's.
+//  */
+// final int compareMagnitude(BigInteger val) {
+//     int[] m1 = mag;
+//     int len1 = m1.length;
+//     int[] m2 = val.mag;
+//     int len2 = m2.length;
+//     if (len1 < len2)
+//         return -1;
+//     if (len1 > len2)
+//         return 1;
+//     for (int i = 0; i < len1; i++) {
+//         int a = m1[i];
+//         int b = m2[i];
+//         if (a != b)
+//             return ((a & LONG_MASK) < (b & LONG_MASK)) ? -1 : 1;
+//     }
+//     return 0;
+// }
+
+// /**
+//  * Version of compareMagnitude that compares magnitude with long value.
+//  * val can't be Long.MIN_VALUE.
+//  */
+// final int compareMagnitude(long val) {
+//     assert val != Long.MIN_VALUE;
+//     int[] m1 = mag;
+//     int len = m1.length;
+//     if (len > 2) {
+//         return 1;
+//     }
+//     if (val < 0) {
+//         val = -val;
+//     }
+//     int highWord = (int)(val >>> 32);
+//     if (highWord == 0) {
+//         if (len < 1)
+//             return -1;
+//         if (len > 1)
+//             return 1;
+//         int a = m1[0];
+//         int b = (int)val;
+//         if (a != b) {
+//             return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+//         }
+//         return 0;
+//     } else {
+//         if (len < 2)
+//             return -1;
+//         int a = m1[0];
+//         int b = highWord;
+//         if (a != b) {
+//             return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+//         }
+//         a = m1[1];
+//         b = (int)val;
+//         if (a != b) {
+//             return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+//         }
+//         return 0;
+//     }
+// }
+
+// /**
+//  * Compares this BigInteger with the specified Object for equality.
+//  *
+//  * @param  x Object to which this BigInteger is to be compared.
+//  * @return {@code true} if and only if the specified Object is a
+//  *         BigInteger whose value is numerically equal to this BigInteger.
+//  */
+// public boolean equals(Object x) {
+//     // This test is just an optimization, which may or may not help
+//     if (x == this)
+//         return true;
+
+//     if (!(x instanceof BigInteger))
+//         return false;
+
+//     BigInteger xInt = (BigInteger) x;
+//     if (xInt.signum != signum)
+//         return false;
+
+//     int[] m = mag;
+//     int len = m.length;
+//     int[] xm = xInt.mag;
+//     if (len != xm.length)
+//         return false;
+
+//     for (int i = 0; i < len; i++)
+//         if (xm[i] != m[i])
+//             return false;
+
+//     return true;
+// }
+
+// /**
+//  * Returns the minimum of this BigInteger and {@code val}.
+//  *
+//  * @param  val value with which the minimum is to be computed.
+//  * @return the BigInteger whose value is the lesser of this BigInteger and
+//  *         {@code val}.  If they are equal, either may be returned.
+//  */
+// public BigInteger min(BigInteger val) {
+//     return (compareTo(val) < 0 ? this : val);
+// }
+
+// /**
+//  * Returns the maximum of this BigInteger and {@code val}.
+//  *
+//  * @param  val value with which the maximum is to be computed.
+//  * @return the BigInteger whose value is the greater of this and
+//  *         {@code val}.  If they are equal, either may be returned.
+//  */
+// public BigInteger max(BigInteger val) {
+//     return (compareTo(val) > 0 ? this : val);
+// }
+
+// // Hash Function
+
+// /**
+//  * Returns the hash code for this BigInteger.
+//  *
+//  * @return hash code for this BigInteger.
+//  */
+// public int hashCode() {
+//     int hashCode = 0;
+
+//     for (int i=0; i < mag.length; i++)
+//         hashCode = (int)(31*hashCode + (mag[i] & LONG_MASK));
+
+//     return hashCode * signum;
+// }
+
+    /**
+     * Compares this BigInteger with the specified BigInteger.  This
+     * method is provided in preference to individual methods for each
+     * of the six boolean comparison operators ({@literal <}, ==,
+     * {@literal >}, {@literal >=}, !=, {@literal <=}).  The suggested
+     * idiom for performing these comparisons is: {@code
+     * (x.compareTo(y)} &lt;<i>op</i>&gt; {@code 0)}, where
+     * &lt;<i>op</i>&gt; is one of the six comparison operators.
+     *
+     * @param  val BigInteger to which this BigInteger is to be compared.
+     * @return -1, 0 or 1 as this BigInteger is numerically less than, equal
+     *         to, or greater than {@code val}.
+     */
+    public int compareTo(BigInteger val) {
+        if (signum == val.signum) {
+            switch (signum) {
+            case 1:
+                return compareMagnitude(val);
+            case -1:
+                return val.compareMagnitude(this);
+            default:
+                return 0;
+            }
+        }
+        return signum > val.signum ? 1 : -1;
+    }
+
+    /**
+     * Compares the magnitude array of this BigInteger with the specified
+     * BigInteger's. This is the version of compareTo ignoring sign.
+     *
+     * @param val BigInteger whose magnitude array to be compared.
+     * @return -1, 0 or 1 as this magnitude array is less than, equal to or
+     *         greater than the magnitude aray for the specified BigInteger's.
+     */
+    final int compareMagnitude(BigInteger val) {
+        int[] m1 = mag;
+        int len1 = m1.length;
+        int[] m2 = val.mag;
+        int len2 = m2.length;
+        if (len1 < len2)
+            return -1;
+        if (len1 > len2)
+            return 1;
+        for (int i = 0; i < len1; i++) {
+            int a = m1[i];
+            int b = m2[i];
+            if (a != b)
+                return ((a & LONG_MASK) < (b & LONG_MASK)) ? -1 : 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Version of compareMagnitude that compares magnitude with long value.
+     * val can't be Long.MIN_VALUE.
+     */
+    final int compareMagnitude(long val) {
+        assert val != Long.MIN_VALUE;
+        int[] m1 = mag;
+        int len = m1.length;
+        if (len > 2) {
+            return 1;
+        }
+        if (val < 0) {
+            val = -val;
+        }
+        int highWord = (int)(val >>> 32);
+        if (highWord == 0) {
+            if (len < 1)
+                return -1;
+            if (len > 1)
+                return 1;
+            int a = m1[0];
+            int b = (int)val;
+            if (a != b) {
+                return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+            }
+            return 0;
+        } else {
+            if (len < 2)
+                return -1;
+            int a = m1[0];
+            int b = highWord;
+            if (a != b) {
+                return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+            }
+            a = m1[1];
+            b = (int)val;
+            if (a != b) {
+                return ((a & LONG_MASK) < (b & LONG_MASK))? -1 : 1;
+            }
+            return 0;
+        }
+    }

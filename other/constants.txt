@@ -1,0 +1,185 @@
+
+
+    /**
+     * This mask is used to obtain the value of an int as if it were unsigned.
+     */
+    static final long LONG_MASK = 0xffffffffL;
+
+    /**
+     * This constant limits {@code mag.length} of BigIntegers to the supported
+     * range.
+     */
+    private static final int MAX_MAG_LENGTH = Integer.MAX_VALUE / Integer.SIZE + 1; // (1 << 26)
+
+    /**
+     * Bit lengths larger than this constant can cause overflow in searchLen
+     * calculation and in BitSieve.singleSearch method.
+     */
+    private static final  int PRIME_SEARCH_BIT_LENGTH_LIMIT = 500000000;
+
+    /**
+     * The threshold value for using Karatsuba multiplication.  If the number
+     * of ints in both mag arrays are greater than this number, then
+     * Karatsuba multiplication will be used.   This value is found
+     * experimentally to work well.
+     */
+    private static final int KARATSUBA_THRESHOLD = 80;
+
+    /**
+     * The threshold value for using 3-way Toom-Cook multiplication.
+     * If the number of ints in each mag array is greater than the
+     * Karatsuba threshold, and the number of ints in at least one of
+     * the mag arrays is greater than this threshold, then Toom-Cook
+     * multiplication will be used.
+     */
+    private static final int TOOM_COOK_THRESHOLD = 240;
+
+    /**
+     * The threshold value for using Karatsuba squaring.  If the number
+     * of ints in the number are larger than this value,
+     * Karatsuba squaring will be used.   This value is found
+     * experimentally to work well.
+     */
+    private static final int KARATSUBA_SQUARE_THRESHOLD = 128;
+
+    /**
+     * The threshold value for using Toom-Cook squaring.  If the number
+     * of ints in the number are larger than this value,
+     * Toom-Cook squaring will be used.   This value is found
+     * experimentally to work well.
+     */
+    private static final int TOOM_COOK_SQUARE_THRESHOLD = 216;
+
+    /**
+     * The threshold value for using Burnikel-Ziegler division.  If the number
+     * of ints in the divisor are larger than this value, Burnikel-Ziegler
+     * division may be used.  This value is found experimentally to work well.
+     */
+    static final int BURNIKEL_ZIEGLER_THRESHOLD = 80;
+
+    /**
+     * The offset value for using Burnikel-Ziegler division.  If the number
+     * of ints in the divisor exceeds the Burnikel-Ziegler threshold, and the
+     * number of ints in the dividend is greater than the number of ints in the
+     * divisor plus this value, Burnikel-Ziegler division will be used.  This
+     * value is found experimentally to work well.
+     */
+    static final int BURNIKEL_ZIEGLER_OFFSET = 40;
+
+    /**
+     * The threshold value for using Schoenhage recursive base conversion. If
+     * the number of ints in the number are larger than this value,
+     * the Schoenhage algorithm will be used.  In practice, it appears that the
+     * Schoenhage routine is faster for any threshold down to 2, and is
+     * relatively flat for thresholds between 2-25, so this choice may be
+     * varied within this range for very small effect.
+     */
+    private static final int SCHOENHAGE_BASE_CONVERSION_THRESHOLD = 20;
+
+    /**
+     * The threshold value for using squaring code to perform multiplication
+     * of a {@code BigInteger} instance by itself.  If the number of ints in
+     * the number are larger than this value, {@code multiply(this)} will
+     * return {@code square()}.
+     */
+    private static final int MULTIPLY_SQUARE_THRESHOLD = 20;
+
+    /**
+     * The threshold for using an intrinsic version of
+     * implMontgomeryXXX to perform Montgomery multiplication.  If the
+     * number of ints in the number is more than this value we do not
+     * use the intrinsic.
+     */
+    private static final int MONTGOMERY_INTRINSIC_THRESHOLD = 512;
+
+    // bitsPerDigit in the given radix times 1024
+    // Rounded up to avoid underallocation.
+    private static long bitsPerDigit[] = { 0, 0,
+        1024, 1624, 2048, 2378, 2648, 2875, 3072, 3247, 3402, 3543, 3672,
+        3790, 3899, 4001, 4096, 4186, 4271, 4350, 4426, 4498, 4567, 4633,
+        4696, 4756, 4814, 4870, 4923, 4975, 5025, 5074, 5120, 5166, 5210,
+                                           5253, 5295};
+
+    /**
+     * Initialize static constant array when class is loaded.
+     */
+    private static final int MAX_CONSTANT = 16;
+    private static BigInteger posConst[] = new BigInteger[MAX_CONSTANT+1];
+    private static BigInteger negConst[] = new BigInteger[MAX_CONSTANT+1];
+
+    /**
+     * The cache of powers of each radix.  This allows us to not have to
+     * recalculate powers of radix^(2^n) more than once.  This speeds
+     * Schoenhage recursive base conversion significantly.
+     */
+    private static volatile BigInteger[][] powerCache;
+
+    /** The cache of logarithms of radices for base conversion. */
+    private static final double[] logCache;
+
+    /** The natural log of 2.  This is used in computing cache indices. */
+    private static final double LOG_TWO = Math.log(2.0);
+
+    static {
+        assert 0 < KARATSUBA_THRESHOLD
+            && KARATSUBA_THRESHOLD < TOOM_COOK_THRESHOLD
+            && TOOM_COOK_THRESHOLD < Integer.MAX_VALUE
+            && 0 < KARATSUBA_SQUARE_THRESHOLD
+            && KARATSUBA_SQUARE_THRESHOLD < TOOM_COOK_SQUARE_THRESHOLD
+            && TOOM_COOK_SQUARE_THRESHOLD < Integer.MAX_VALUE :
+            "Algorithm thresholds are inconsistent";
+
+        for (int i = 1; i <= MAX_CONSTANT; i++) {
+            int[] magnitude = new int[1];
+            magnitude[0] = i;
+            posConst[i] = new BigInteger(magnitude,  1);
+            negConst[i] = new BigInteger(magnitude, -1);
+        }
+
+        /*
+         * Initialize the cache of radix^(2^x) values used for base conversion
+         * with just the very first value.  Additional values will be created
+         * on demand.
+         */
+        powerCache = new BigInteger[Character.MAX_RADIX+1][];
+        logCache = new double[Character.MAX_RADIX+1];
+
+        for (int i=Character.MIN_RADIX; i <= Character.MAX_RADIX; i++) {
+            powerCache[i] = new BigInteger[] { BigInteger.valueOf(i) };
+            logCache[i] = Math.log(i);
+        }
+    }
+
+    /**
+     * The BigInteger constant zero.
+     *
+     * @since   1.2
+     */
+    public static final BigInteger ZERO = new BigInteger(new int[0], 0);
+
+    /**
+     * The BigInteger constant one.
+     *
+     * @since   1.2
+     */
+    public static final BigInteger ONE = valueOf(1);
+
+    /**
+     * The BigInteger constant two.
+     *
+     * @since   9
+     */
+    public static final BigInteger TWO = valueOf(2);
+
+    /**
+     * The BigInteger constant -1.  (Not exported.)
+     */
+    private static final BigInteger NEGATIVE_ONE = valueOf(-1);
+
+    /**
+     * The BigInteger constant ten.
+     *
+     * @since   1.5
+     */
+    public static final BigInteger TEN = valueOf(10);
+    

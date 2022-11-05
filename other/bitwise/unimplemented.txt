@@ -1,0 +1,493 @@
+
+
+    /**
+     * Package private method to return bit length for an integer.
+     */
+    static int bitLengthForInt(int n) {
+        return 32 - Integer.numberOfLeadingZeros(n);
+    }
+
+    /**
+     * Package private method to return bit length for an integer.
+     */
+    static int bitLengthForInt(int n) {
+        return 32 - Integer.numberOfLeadingZeros(n);
+    }
+
+    /**
+     * Left shift int array a up to len by n bits. Returns the array that
+     * results from the shift since space may have to be reallocated.
+     */
+    private static int[] leftShift(int[] a, int len, int n) {
+        int nInts = n >>> 5;
+        int nBits = n&0x1F;
+        int bitsInHighWord = bitLengthForInt(a[0]);
+
+        // If shift can be done without recopy, do so
+        if (n <= (32-bitsInHighWord)) {
+            primitiveLeftShift(a, len, nBits);
+            return a;
+        } else { // Array must be resized
+            if (nBits <= (32-bitsInHighWord)) {
+                int result[] = new int[nInts+len];
+                System.arraycopy(a, 0, result, 0, len);
+                primitiveLeftShift(result, result.length, nBits);
+                return result;
+            } else {
+                int result[] = new int[nInts+len+1];
+                System.arraycopy(a, 0, result, 0, len);
+                primitiveRightShift(result, result.length, 32 - nBits);
+                return result;
+            }
+        }
+    }
+
+    // shifts a up to len right n bits assumes no leading zeros, 0<n<32
+    static void primitiveRightShift(int[] a, int len, int n) {
+        int n2 = 32 - n;
+        for (int i=len-1, c=a[i]; i > 0; i--) {
+            int b = c;
+            c = a[i-1];
+            a[i] = (c << n2) | (b >>> n);
+        }
+        a[0] >>>= n;
+    }
+
+    // shifts a up to len left n bits assumes no leading zeros, 0<=n<32
+    static void primitiveLeftShift(int[] a, int len, int n) {
+        if (len == 0 || n == 0)
+            return;
+
+        int n2 = 32 - n;
+        for (int i=0, c=a[i], m=i+len-1; i < m; i++) {
+            int b = c;
+            c = a[i+1];
+            a[i] = (b << n) | (c >>> n2);
+        }
+        a[len-1] <<= n;
+    }
+
+    /**
+     * Calculate bitlength of contents of the first len elements an int array,
+     * assuming there are no leading zero ints.
+     */
+    private static int bitLength(int[] val, int len) {
+        if (len == 0)
+            return 0;
+        return ((len - 1) << 5) + bitLengthForInt(val[0]);
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this << n)}.
+     * The shift distance, {@code n}, may be negative, in which case
+     * this method performs a right shift.
+     * (Computes <code>floor(this * 2<sup>n</sup>)</code>.)
+     *
+     * @param  n shift distance, in bits.
+     * @return {@code this << n}
+     * @see #shiftRight
+     */
+    public BigInteger shiftLeft(int n) {
+        if (signum == 0)
+            return ZERO;
+        if (n > 0) {
+            return new BigInteger(shiftLeft(mag, n), signum);
+        } else if (n == 0) {
+            return this;
+        } else {
+            // Possible int overflow in (-n) is not a trouble,
+            // because shiftRightImpl considers its argument unsigned
+            return shiftRightImpl(-n);
+        }
+    }
+
+    /**
+     * Returns a magnitude array whose value is {@code (mag << n)}.
+     * The shift distance, {@code n}, is considered unnsigned.
+     * (Computes <code>this * 2<sup>n</sup></code>.)
+     *
+     * @param mag magnitude, the most-significant int ({@code mag[0]}) must be non-zero.
+     * @param  n unsigned shift distance, in bits.
+     * @return {@code mag << n}
+     */
+    private static int[] shiftLeft(int[] mag, int n) {
+        int nInts = n >>> 5;
+        int nBits = n & 0x1f;
+        int magLen = mag.length;
+        int newMag[] = null;
+
+        if (nBits == 0) {
+            newMag = new int[magLen + nInts];
+            System.arraycopy(mag, 0, newMag, 0, magLen);
+        } else {
+            int i = 0;
+            int nBits2 = 32 - nBits;
+            int highBits = mag[0] >>> nBits2;
+            if (highBits != 0) {
+                newMag = new int[magLen + nInts + 1];
+                newMag[i++] = highBits;
+            } else {
+                newMag = new int[magLen + nInts];
+            }
+            int j=0;
+            while (j < magLen-1)
+                newMag[i++] = mag[j++] << nBits | mag[j] >>> nBits2;
+            newMag[i] = mag[j] << nBits;
+        }
+        return newMag;
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this >> n)}.  Sign
+     * extension is performed.  The shift distance, {@code n}, may be
+     * negative, in which case this method performs a left shift.
+     * (Computes <code>floor(this / 2<sup>n</sup>)</code>.)
+     *
+     * @param  n shift distance, in bits.
+     * @return {@code this >> n}
+     * @see #shiftLeft
+     */
+    public BigInteger shiftRight(int n) {
+        if (signum == 0)
+            return ZERO;
+        if (n > 0) {
+            return shiftRightImpl(n);
+        } else if (n == 0) {
+            return this;
+        } else {
+            // Possible int overflow in {@code -n} is not a trouble,
+            // because shiftLeft considers its argument unsigned
+            return new BigInteger(shiftLeft(mag, -n), signum);
+        }
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this >> n)}. The shift
+     * distance, {@code n}, is considered unsigned.
+     * (Computes <code>floor(this * 2<sup>-n</sup>)</code>.)
+     *
+     * @param  n unsigned shift distance, in bits.
+     * @return {@code this >> n}
+     */
+    private BigInteger shiftRightImpl(int n) {
+        int nInts = n >>> 5;
+        int nBits = n & 0x1f;
+        int magLen = mag.length;
+        int newMag[] = null;
+
+        // Special case: entire contents shifted off the end
+        if (nInts >= magLen)
+            return (signum >= 0 ? ZERO : negConst[1]);
+
+        if (nBits == 0) {
+            int newMagLen = magLen - nInts;
+            newMag = Arrays.copyOf(mag, newMagLen);
+        } else {
+            int i = 0;
+            int highBits = mag[0] >>> nBits;
+            if (highBits != 0) {
+                newMag = new int[magLen - nInts];
+                newMag[i++] = highBits;
+            } else {
+                newMag = new int[magLen - nInts -1];
+            }
+
+            int nBits2 = 32 - nBits;
+            int j=0;
+            while (j < magLen - nInts - 1)
+                newMag[i++] = (mag[j++] << nBits2) | (mag[j] >>> nBits);
+        }
+
+        if (signum < 0) {
+            // Find out whether any one-bits were shifted off the end.
+            boolean onesLost = false;
+            for (int i=magLen-1, j=magLen-nInts; i >= j && !onesLost; i--)
+                onesLost = (mag[i] != 0);
+            if (!onesLost && nBits != 0)
+                onesLost = (mag[magLen - nInts - 1] << (32 - nBits) != 0);
+
+            if (onesLost)
+                newMag = javaIncrement(newMag);
+        }
+
+        return new BigInteger(newMag, signum);
+    }
+
+    int[] javaIncrement(int[] val) {
+        int lastSum = 0;
+        for (int i=val.length-1;  i >= 0 && lastSum == 0; i--)
+            lastSum = (val[i] += 1);
+        if (lastSum == 0) {
+            val = new int[val.length+1];
+            val[0] = 1;
+        }
+        return val;
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this & val)}.  (This
+     * method returns a negative BigInteger if and only if this and val are
+     * both negative.)
+     *
+     * @param val value to be AND'ed with this BigInteger.
+     * @return {@code this & val}
+     */
+    public BigInteger and(BigInteger val) {
+        int[] result = new int[Math.max(intLength(), val.intLength())];
+        for (int i=0; i < result.length; i++)
+            result[i] = (getInt(result.length-i-1)
+                         & val.getInt(result.length-i-1));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this | val)}.  (This method
+     * returns a negative BigInteger if and only if either this or val is
+     * negative.)
+     *
+     * @param val value to be OR'ed with this BigInteger.
+     * @return {@code this | val}
+     */
+    public BigInteger or(BigInteger val) {
+        int[] result = new int[Math.max(intLength(), val.intLength())];
+        for (int i=0; i < result.length; i++)
+            result[i] = (getInt(result.length-i-1)
+                         | val.getInt(result.length-i-1));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this ^ val)}.  (This method
+     * returns a negative BigInteger if and only if exactly one of this and
+     * val are negative.)
+     *
+     * @param val value to be XOR'ed with this BigInteger.
+     * @return {@code this ^ val}
+     */
+    public BigInteger xor(BigInteger val) {
+        int[] result = new int[Math.max(intLength(), val.intLength())];
+        for (int i=0; i < result.length; i++)
+            result[i] = (getInt(result.length-i-1)
+                         ^ val.getInt(result.length-i-1));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (~this)}.  (This method
+     * returns a negative value if and only if this BigInteger is
+     * non-negative.)
+     *
+     * @return {@code ~this}
+     */
+    public BigInteger not() {
+        int[] result = new int[intLength()];
+        for (int i=0; i < result.length; i++)
+            result[i] = ~getInt(result.length-i-1);
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is {@code (this & ~val)}.  This
+     * method, which is equivalent to {@code and(val.not())}, is provided as
+     * a convenience for masking operations.  (This method returns a negative
+     * BigInteger if and only if {@code this} is negative and {@code val} is
+     * positive.)
+     *
+     * @param val value to be complemented and AND'ed with this BigInteger.
+     * @return {@code this & ~val}
+     */
+    public BigInteger andNot(BigInteger val) {
+        int[] result = new int[Math.max(intLength(), val.intLength())];
+        for (int i=0; i < result.length; i++)
+            result[i] = (getInt(result.length-i-1)
+                         & ~val.getInt(result.length-i-1));
+
+        return valueOf(result);
+    }
+
+
+    // Single Bit Operations
+
+    /**
+     * Returns {@code true} if and only if the designated bit is set.
+     * (Computes {@code ((this & (1<<n)) != 0)}.)
+     *
+     * @param  n index of bit to test.
+     * @return {@code true} if and only if the designated bit is set.
+     * @throws ArithmeticException {@code n} is negative.
+     */
+    public boolean testBit(int n) {
+        if (n < 0)
+            throw new ArithmeticException("Negative bit address");
+
+        return (getInt(n >>> 5) & (1 << (n & 31))) != 0;
+    }
+
+    /**
+     * Returns a BigInteger whose value is equivalent to this BigInteger
+     * with the designated bit set.  (Computes {@code (this | (1<<n))}.)
+     *
+     * @param  n index of bit to set.
+     * @return {@code this | (1<<n)}
+     * @throws ArithmeticException {@code n} is negative.
+     */
+    public BigInteger setBit(int n) {
+        if (n < 0)
+            throw new ArithmeticException("Negative bit address");
+
+        int intNum = n >>> 5;
+        int[] result = new int[Math.max(intLength(), intNum+2)];
+
+        for (int i=0; i < result.length; i++)
+            result[result.length-i-1] = getInt(i);
+
+        result[result.length-intNum-1] |= (1 << (n & 31));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is equivalent to this BigInteger
+     * with the designated bit cleared.
+     * (Computes {@code (this & ~(1<<n))}.)
+     *
+     * @param  n index of bit to clear.
+     * @return {@code this & ~(1<<n)}
+     * @throws ArithmeticException {@code n} is negative.
+     */
+    public BigInteger clearBit(int n) {
+        if (n < 0)
+            throw new ArithmeticException("Negative bit address");
+
+        int intNum = n >>> 5;
+        int[] result = new int[Math.max(intLength(), ((n + 1) >>> 5) + 1)];
+
+        for (int i=0; i < result.length; i++)
+            result[result.length-i-1] = getInt(i);
+
+        result[result.length-intNum-1] &= ~(1 << (n & 31));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns a BigInteger whose value is equivalent to this BigInteger
+     * with the designated bit flipped.
+     * (Computes {@code (this ^ (1<<n))}.)
+     *
+     * @param  n index of bit to flip.
+     * @return {@code this ^ (1<<n)}
+     * @throws ArithmeticException {@code n} is negative.
+     */
+    public BigInteger flipBit(int n) {
+        if (n < 0)
+            throw new ArithmeticException("Negative bit address");
+
+        int intNum = n >>> 5;
+        int[] result = new int[Math.max(intLength(), intNum+2)];
+
+        for (int i=0; i < result.length; i++)
+            result[result.length-i-1] = getInt(i);
+
+        result[result.length-intNum-1] ^= (1 << (n & 31));
+
+        return valueOf(result);
+    }
+
+    /**
+     * Returns the index of the rightmost (lowest-order) one bit in this
+     * BigInteger (the number of zero bits to the right of the rightmost
+     * one bit).  Returns -1 if this BigInteger contains no one bits.
+     * (Computes {@code (this == 0? -1 : log2(this & -this))}.)
+     *
+     * @return index of the rightmost one bit in this BigInteger.
+     */
+    public int getLowestSetBit() {
+        int lsb = lowestSetBitPlusTwo - 2;
+        if (lsb == -2) {  // lowestSetBit not initialized yet
+            lsb = 0;
+            if (signum == 0) {
+                lsb -= 1;
+            } else {
+                // Search for lowest order nonzero int
+                int i,b;
+                for (i=0; (b = getInt(i)) == 0; i++)
+                    ;
+                lsb += (i << 5) + Integer.numberOfTrailingZeros(b);
+            }
+            lowestSetBitPlusTwo = lsb + 2;
+        }
+        return lsb;
+    }
+
+
+    // Miscellaneous Bit Operations
+
+    /**
+     * Returns the number of bits in the minimal two's-complement
+     * representation of this BigInteger, <em>excluding</em> a sign bit.
+     * For positive BigIntegers, this is equivalent to the number of bits in
+     * the ordinary binary representation.  For zero this method returns
+     * {@code 0}.  (Computes {@code (ceil(log2(this < 0 ? -this : this+1)))}.)
+     *
+     * @return number of bits in the minimal two's-complement
+     *         representation of this BigInteger, <em>excluding</em> a sign bit.
+     */
+    public int bitLength() {
+        int n = bitLengthPlusOne - 1;
+        if (n == -1) { // bitLength not initialized yet
+            int[] m = mag;
+            int len = m.length;
+            if (len == 0) {
+                n = 0; // offset by one to initialize
+            }  else {
+                // Calculate the bit length of the magnitude
+                int magBitLength = ((len - 1) << 5) + bitLengthForInt(mag[0]);
+                 if (signum < 0) {
+                     // Check if magnitude is a power of two
+                     boolean pow2 = (Integer.bitCount(mag[0]) == 1);
+                     for (int i=1; i< len && pow2; i++)
+                         pow2 = (mag[i] == 0);
+
+                     n = (pow2 ? magBitLength - 1 : magBitLength);
+                 } else {
+                     n = magBitLength;
+                 }
+            }
+            bitLengthPlusOne = n + 1;
+        }
+        return n;
+    }
+
+    /**
+     * Returns the number of bits in the two's complement representation
+     * of this BigInteger that differ from its sign bit.  This method is
+     * useful when implementing bit-vector style sets atop BigIntegers.
+     *
+     * @return number of bits in the two's complement representation
+     *         of this BigInteger that differ from its sign bit.
+     */
+    public int bitCount() {
+        int bc = bitCountPlusOne - 1;
+        if (bc == -1) {  // bitCount not initialized yet
+            bc = 0;      // offset by one to initialize
+            // Count the bits in the magnitude
+            for (int i=0; i < mag.length; i++)
+                bc += Integer.bitCount(mag[i]);
+            if (signum < 0) {
+                // Count the trailing zeros in the magnitude
+                int magTrailingZeroCount = 0, j;
+                for (j=mag.length-1; mag[j] == 0; j--)
+                    magTrailingZeroCount += 32;
+                magTrailingZeroCount += Integer.numberOfTrailingZeros(mag[j]);
+                bc += magTrailingZeroCount - 1;
+            }
+            bitCountPlusOne = bc + 1;
+        }
+        return bc;
+    }
+    
