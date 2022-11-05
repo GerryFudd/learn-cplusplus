@@ -21,6 +21,8 @@ namespace math {
         string as_decimal_string();
         BigInt operator + (const BigInt&);
         BigInt operator - (const BigInt&);
+        BigInt operator - ();
+        BigInt abs();
         bool equals (const BigInt&);
     };
 

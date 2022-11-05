@@ -208,4 +208,12 @@ namespace math {
         }
         return do_sub(other.magnitude_pointer, other.magnitude_length);
     }
+
+    BigInt BigInt::operator- () {
+        return BigInt(magnitude_pointer, magnitude_length, !sign);
+    }
+
+    BigInt BigInt::abs () {
+        return BigInt(magnitude_pointer, magnitude_length, false);
+    }
 }

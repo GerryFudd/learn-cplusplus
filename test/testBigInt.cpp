@@ -106,3 +106,15 @@ BOOST_AUTO_TEST_CASE(subtract_with_several_orders_of_magnitude_difference)
   BigInt result = a - b;
   BOOST_TEST(result.equals(BigInt((unsigned int []){0x1c4f, 0x3a19, 0x0, 0x2}, 4, false)), result.as_decimal_string() + " should equal 158456325010082058837115804751\n");
 }
+
+BOOST_AUTO_TEST_CASE(negate_big_int) {
+  BigInt a((unsigned int[]){9728, 1921}, 2, true), b((unsigned int[]){38921}, 1, false);
+  BOOST_TEST((-a).equals(BigInt((unsigned int[]){9728, 1921}, 2, false)));
+  BOOST_TEST((-b).equals(BigInt((unsigned int[]){38921}, 1, true)));
+}
+
+BOOST_AUTO_TEST_CASE(abs_value_big_int) {
+  BigInt a((unsigned int[]){9728, 1921}, 2, true), b((unsigned int[]){38921}, 1, false);
+  BOOST_TEST((a.abs()).equals(BigInt((unsigned int[]){9728, 1921}, 2, false)));
+  BOOST_TEST((b.abs()).equals(BigInt((unsigned int[]){38921}, 1, false)));
+}
