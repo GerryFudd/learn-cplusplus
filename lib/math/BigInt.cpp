@@ -101,7 +101,7 @@ namespace math {
         }
         return true;
     }
-
+    
     BigInt BigInt::do_add(unsigned int * other_magnitude, unsigned short other_length) {
         unsigned int * larger_mag;
         unsigned short larger_length, smaller_length;
@@ -137,93 +137,38 @@ namespace math {
         }
         return BigInt(result_magnitude, cursor, sign);
     }
-    
+
     BigInt BigInt::sub_from_larger(unsigned int * larger_mag, unsigned short larger_len, unsigned int * smaller_mag, unsigned short smaller_len, bool sign) {
         unsigned short cursor = 0;
         unsigned short result_length = 0;
         unsigned int result_magnitude[larger_len];
-        unsigned int current_larger, current_smaller;
-        bool overflow = false, current_overflow;
-        /*
-            Example: 49 - 107 if place values are all mod 10
-            larger = 107
-            smaller = 49
-            result_magnitude = [0, 0, 0]
+        unsigned short overflow = 0;
 
-            iter 1
-            cursor = 0
-            result_length = 0
-            overflow = false
-
-            current_larger = 7
-            current_smaller = 9
-            current_overflow = true
-            result_magnitude = [8, 0, 0]
-
-            iter 2
-            cursor = 1
-            result_length = 1
-            overflow = true
-
-            current_overflow = true
-            current_larger = 9
-            current_smaller = 4
-            result_magnitude = [8, 5, 0]
-
-            iter 3
-            cursor = 2
-            result_length = 2
-            overflow = true
-
-            current_larger = 0
-            current_smaller = 0
-            current_overflow = false
-            result_magnitude = [8, 5, 0]
-
-            while loop terminates
-
-            result_magnitude = [8, 5, 0]
-            result_length = 2
-
-            return BigInt([8, 5, 0], 2, true)
-        */
-        while (cursor < larger_len || overflow)
+        while (cursor < smaller_len)
         {
-            // Initialize loop iteration values
-
-            // Larger will always have a value at this index
-            current_larger = *(larger_mag + cursor);
-            current_overflow = false;
-            if (overflow) {
-                if (current_larger == 0) {
-                    current_overflow = true;
-                }
-                current_larger--;
-            }
-            if (cursor < smaller_len) {
-                current_smaller = *(smaller_mag + cursor);
+            result_magnitude[cursor] = *(larger_mag + cursor) - *(smaller_mag + cursor) - overflow;
+            if (*(larger_mag + cursor) < *(smaller_mag + cursor)) {
+                overflow = 1;
             } else {
-                current_smaller = 0;
+                overflow = 0;
             }
-
-            // Do iteration work
-            if (current_larger >= current_smaller) {
-                result_magnitude[cursor] = current_larger - current_smaller;
-            } else {
-                // modular arithmetic FTW!
-                result_magnitude[cursor] = current_larger - current_smaller;
-                current_overflow = true;
-            }
-            if (result_magnitude[cursor] != 0) {
-                result_length = cursor + 1;
-            }
-
-            // Prepare for next iteration
-            overflow = current_overflow;
             cursor++;
         }
-        
-        return BigInt(result_magnitude, result_length, sign);
+        while (overflow == 1) {
+            if (*(larger_mag + cursor) != 0) {
+                overflow = 0;
+            }
+            result_magnitude[cursor] = *(larger_mag + cursor) - 1;
+            cursor ++;
+        }
+        while (cursor < larger_len) {
+            result_magnitude[cursor] = *(larger_mag + cursor);
+            cursor++;
+        }
+        while (result_magnitude[cursor - 1] == 0) {
+            cursor--;
+        }
+        return BigInt(result_magnitude, cursor, sign);
     }
 
     BigInt BigInt::do_sub(unsigned int * other_magnitude, unsigned short other_length) {
