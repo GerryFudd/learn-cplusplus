@@ -26,19 +26,6 @@
 // }
 
 // /**
-//  * Returns a BigInteger whose value is {@code (this * val)}.
-//  *
-//  * @implNote An implementation may offer better algorithmic
-//  * performance when {@code val == this}.
-//  *
-//  * @param  val value to be multiplied by this BigInteger.
-//  * @return {@code this * val}
-//  */
-// public BigInteger multiply(BigInteger val) {
-//     return multiply(val, false);
-// }
-
-// /**
 //  * Returns a BigInteger whose value is {@code (this * val)}.  If
 //  * the invocation is recursive certain overflow checks are skipped.
 //  *

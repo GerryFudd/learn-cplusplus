@@ -14,16 +14,20 @@ namespace math {
         BigInt do_add(unsigned int *, unsigned short);
         BigInt do_sub(unsigned int *, unsigned short);
         static BigInt sub_from_larger(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
+        BigInt mult (const BigInt&, bool);
     public:
         BigInt();
         ~BigInt();
         BigInt (unsigned int [], unsigned short, bool);
+        BigInt (unsigned int);
         string as_decimal_string();
         BigInt operator + (const BigInt&);
         BigInt operator - (const BigInt&);
         BigInt operator - ();
         BigInt abs();
         bool equals (const BigInt&);
+
+        BigInt operator * (const BigInt&);
     };
 
 

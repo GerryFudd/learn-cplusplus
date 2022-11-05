@@ -118,3 +118,28 @@ BOOST_AUTO_TEST_CASE(abs_value_big_int) {
   BOOST_TEST((a.abs()).equals(BigInt((unsigned int[]){9728, 1921}, 2, false)));
   BOOST_TEST((b.abs()).equals(BigInt((unsigned int[]){38921}, 1, false)));
 }
+
+BOOST_AUTO_TEST_CASE(multiply_by_zero) {
+  BigInt a((unsigned int[]){9728, 1921}, 2, false), z;
+
+  BOOST_TEST((a * z).equals(z));
+  BOOST_TEST((z * a).equals(z));
+}
+
+BOOST_AUTO_TEST_CASE(multiply_by_one) {
+  BigInt a((unsigned int[]){9728, 1921}, 2, false), e{(unsigned int)1};
+
+  BOOST_TEST((a * e).equals(a));
+  BOOST_TEST((e * a).equals(a));
+}
+
+BOOST_AUTO_TEST_CASE(multiply_with_multiple_blocks_and_overflow) {
+  BigInt a((unsigned int[]){0xa3010210, 0x1129, 0xa3}, 3, false),
+    b((unsigned int[]){0x31872f01, 0x1b21, 0x20e0, 0x720e170}, 4, true);
+  // 0xf8d1f210, 0x1f8944da
+  // 0xf8d1f210, 0x3de238ea, 0x1146
+  BigInt product = a * b;
+  BOOST_TEST(product.equals(BigInt(
+    (unsigned int[]){0xf8d1f210, 0x26a7d113, 0x4c085984, 0xe78675f1, 0x57db7049, 0x89ef8aca, 0x4}, 7, true
+  )), product.as_decimal_string() + " should equal -28490580746921185856651605176401520623848415388879901815312");
+}

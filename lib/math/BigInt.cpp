@@ -28,6 +28,13 @@ namespace math {
         sign = false;
     }
 
+    BigInt::BigInt (unsigned int v) {
+        magnitude_pointer = new unsigned int [1];
+        magnitude_pointer[0] = v;
+        magnitude_length = 1;
+        sign = false;
+    }
+
     BigInt::BigInt (unsigned int magnitude[], unsigned short length, bool sgn) {
         magnitude_pointer = new unsigned int [length];
         for (int i = 0; i < length; i++) {
@@ -215,5 +222,158 @@ namespace math {
 
     BigInt BigInt::abs () {
         return BigInt(magnitude_pointer, magnitude_length, false);
+    }
+
+    BigInt BigInt::mult(const BigInt& other, bool is_recursion) {
+        if (
+            (magnitude_length == 1 && *magnitude_pointer == 0) 
+            || (other.magnitude_length == 1 && *other.magnitude_pointer == 0)
+        ) {
+            return BigInt();
+        }
+        if (magnitude_length == 1 && *magnitude_pointer == 1) {
+            return BigInt(other.magnitude_pointer, other.magnitude_length, sign != other.sign);
+        }
+        if (other.magnitude_length == 1 && *other.magnitude_pointer == 1) {
+            return BigInt(magnitude_pointer, magnitude_length, sign != other.sign);
+        }
+        unsigned short result_length = magnitude_length + other.magnitude_length + 2;
+        unsigned int result_magnitude[result_length];
+        for (int i = 0; i < result_length; i++) {
+            result_magnitude[i] = 0;
+        }
+
+        unsigned short t_cursor = 0, o_cursor, cursor_next;
+        unsigned long current_val;
+        while (t_cursor < magnitude_length) {
+            o_cursor = 0;
+            while (o_cursor < other.magnitude_length) {
+                cursor_next = 0;
+                current_val = ((unsigned long)*(magnitude_pointer + t_cursor))
+                    * ((unsigned long)*(other.magnitude_pointer + o_cursor))
+                    + ((unsigned long) result_magnitude[t_cursor + o_cursor]);
+
+                result_magnitude[t_cursor + o_cursor] = (unsigned int) current_val;
+                current_val = current_val >> 32;
+                while (current_val != 0) {
+                    cursor_next++;
+                    current_val += result_magnitude[t_cursor + o_cursor + cursor_next];
+                    result_magnitude[t_cursor + o_cursor + cursor_next] = (unsigned int) current_val;
+                    current_val = current_val >> 32;
+                }
+                o_cursor++;
+            }
+            t_cursor++;
+        }
+        while (result_magnitude[result_length - 1] == 0)
+        {
+            if (result_length == 0) {
+                return BigInt();
+            }
+            result_length--;
+        }
+        return BigInt(result_magnitude, result_length, sign != other.sign);
+    }
+
+// /**
+//  * Returns a BigInteger whose value is {@code (this * val)}.  If
+//  * the invocation is recursive certain overflow checks are skipped.
+//  *
+//  * @param  val value to be multiplied by this BigInteger.
+//  * @param  isRecursion whether this is a recursive invocation
+//  * @return {@code this * val}
+//  */
+// private BigInteger multiply(BigInteger val, boolean isRecursion) {
+//     if (val.signum == 0 || signum == 0)
+//         return ZERO;
+
+//     int xlen = mag.length;
+
+//     if (val == this && xlen > MULTIPLY_SQUARE_THRESHOLD) {
+//         return square();
+//     }
+
+//     int ylen = val.mag.length;
+
+//     if ((xlen < KARATSUBA_THRESHOLD) || (ylen < KARATSUBA_THRESHOLD)) {
+//         int resultSign = signum == val.signum ? 1 : -1;
+//         if (val.mag.length == 1) {
+//             return multiplyByInt(mag,val.mag[0], resultSign);
+//         }
+//         if (mag.length == 1) {
+//             return multiplyByInt(val.mag,mag[0], resultSign);
+//         }
+//         int[] result = multiplyToLen(mag, xlen,
+//                                         val.mag, ylen, null);
+//         result = trustedStripLeadingZeroInts(result);
+//         return new BigInteger(result, resultSign);
+//     } else {
+//         if ((xlen < TOOM_COOK_THRESHOLD) && (ylen < TOOM_COOK_THRESHOLD)) {
+//             return multiplyKaratsuba(this, val);
+//         } else {
+//             //
+//             // In "Hacker's Delight" section 2-13, p.33, it is explained
+//             // that if x and y are unsigned 32-bit quantities and m and n
+//             // are their respective numbers of leading zeros within 32 bits,
+//             // then the number of leading zeros within their product as a
+//             // 64-bit unsigned quantity is either m + n or m + n + 1. If
+//             // their product is not to overflow, it cannot exceed 32 bits,
+//             // and so the number of leading zeros of the product within 64
+//             // bits must be at least 32, i.e., the leftmost set bit is at
+//             // zero-relative position 31 or less.
+//             //
+//             // From the above there are three cases:
+//             //
+//             //     m + n    leftmost set bit    condition
+//             //     -----    ----------------    ---------
+//             //     >= 32    x <= 64 - 32 = 32   no overflow
+//             //     == 31    x >= 64 - 32 = 32   possible overflow
+//             //     <= 30    x >= 64 - 31 = 33   definite overflow
+//             //
+//             // The "possible overflow" condition cannot be detected by
+//             // examning data lengths alone and requires further calculation.
+//             //
+//             // By analogy, if 'this' and 'val' have m and n as their
+//             // respective numbers of leading zeros within 32*MAX_MAG_LENGTH
+//             // bits, then:
+//             //
+//             //     m + n >= 32*MAX_MAG_LENGTH        no overflow
+//             //     m + n == 32*MAX_MAG_LENGTH - 1    possible overflow
+//             //     m + n <= 32*MAX_MAG_LENGTH - 2    definite overflow
+//             //
+//             // Note however that if the number of ints in the result
+//             // were to be MAX_MAG_LENGTH and mag[0] < 0, then there would
+//             // be overflow. As a result the leftmost bit (of mag[0]) cannot
+//             // be used and the constraints must be adjusted by one bit to:
+//             //
+//             //     m + n >  32*MAX_MAG_LENGTH        no overflow
+//             //     m + n == 32*MAX_MAG_LENGTH        possible overflow
+//             //     m + n <  32*MAX_MAG_LENGTH        definite overflow
+//             //
+//             // The foregoing leading zero-based discussion is for clarity
+//             // only. The actual calculations use the estimated bit length
+//             // of the product as this is more natural to the internal
+//             // array representation of the magnitude which has no leading
+//             // zero elements.
+//             //
+//             if (!isRecursion) {
+//                 // The bitLength() instance method is not used here as we
+//                 // are only considering the magnitudes as non-negative. The
+//                 // Toom-Cook multiplication algorithm determines the sign
+//                 // at its end from the two signum values.
+//                 if ((long)bitLength(mag, mag.length) +
+//                     (long)bitLength(val.mag, val.mag.length) >
+//                     32L*MAX_MAG_LENGTH) {
+//                     reportOverflow();
+//                 }
+//             }
+
+//             return multiplyToomCook3(this, val);
+//         }
+//     }
+// }
+    
+    BigInt BigInt::operator* (const BigInt& other) {
+        return mult(other, false);
     }
 }
