@@ -133,11 +133,19 @@ BOOST_AUTO_TEST_CASE(multiply_by_one) {
   BOOST_TEST((e * a).equals(a));
 }
 
+BOOST_AUTO_TEST_CASE(multiply_by_int) {
+  BigInt a((unsigned int[]){0xffffffff, 0xffffffff}, 2, false),
+    b{(unsigned int)0xffffffff},
+    c((unsigned int[]){0x1, 0xffffffff, 0xfffffffe}, 3, false);
+  BigInt ab = a * b;
+  BigInt ba = b * a;
+  BOOST_TEST((ab).equals(c), ab.as_decimal_string() + " should equal " + c.as_decimal_string());
+  BOOST_TEST((ba).equals(c), ba.as_decimal_string() + " should equal " + c.as_decimal_string());
+}
+
 BOOST_AUTO_TEST_CASE(multiply_with_multiple_blocks_and_overflow) {
   BigInt a((unsigned int[]){0xa3010210, 0x1129, 0xa3}, 3, false),
     b((unsigned int[]){0x31872f01, 0x1b21, 0x20e0, 0x720e170}, 4, true);
-  // 0xf8d1f210, 0x1f8944da
-  // 0xf8d1f210, 0x3de238ea, 0x1146
   BigInt product = a * b;
   BOOST_TEST(product.equals(BigInt(
     (unsigned int[]){0xf8d1f210, 0x26a7d113, 0x4c085984, 0xe78675f1, 0x57db7049, 0x89ef8aca, 0x4}, 7, true

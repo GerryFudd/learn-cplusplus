@@ -16,7 +16,7 @@ namespace math {
         BigInt do_sub(unsigned int *, unsigned short);
         static BigInt sub_from_larger(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
         BigInt mult (const BigInt&, bool);
-        static BigInt multiply_by_int(unsigned int *, unsigned short, unsigned int, bool);
+        static BigInt multiply_by_long(unsigned int *, unsigned short, unsigned long, bool);
         static BigInt multiply_to_len(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
     public:
         BigInt();

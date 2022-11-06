@@ -232,39 +232,27 @@ namespace math {
         return BigInt(magnitude_pointer, magnitude_length, false);
     }
 
-    // private static void reportOverflow() {
-    //     throw new ArithmeticException("BigInteger would overflow supported range");
-    // }
+    BigInt BigInt::multiply_by_long(unsigned int * magnitude, unsigned short len, unsigned long val, bool sign) {
+        unsigned int result[len + 1];
+        unsigned long current, overflow = 0;
 
-// private static BigInteger multiplyByInt(int[] x, int y, int sign) {
-//     if (Integer.bitCount(y) == 1) {
-//         return new BigInteger(shiftLeft(x,Integer.numberOfTrailingZeros(y)), sign);
-//     }
-//     int xlen = x.length;
-//     int[] rmag =  new int[xlen + 1];
-//     long carry = 0;
-//     long yl = y & LONG_MASK;
-//     int rstart = rmag.length - 1;
-//     for (int i = xlen - 1; i >= 0; i--) {
-//         long product = (x[i] & LONG_MASK) * yl + carry;
-//         rmag[rstart--] = (int)product;
-//         carry = product >>> 32;
-//     }
-//     if (carry == 0L) {
-//         rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
-//     } else {
-//         rmag[rstart] = (int)carry;
-//     }
-//     return new BigInteger(rmag, sign);
-// }
-
-    BigInt BigInt::multiply_by_int(unsigned int * magnitude, unsigned short len, unsigned int val, bool sign) {
-
-        return BigInt();
+        for (int i = 0; i < len; i++) {
+            current = ((unsigned long) *(magnitude + i)) * val + overflow;
+            result[i] = (unsigned int) current;
+            overflow = current >> 32;
+        }
+        result[len] = overflow;
+        unsigned short result_len = len + 1;
+        while (result[result_len - 1] == 0) {
+            if (result_len == 1) {
+                return BigInt();
+            }
+            result_len--;
+        }
+        return BigInt(result, result_len, sign);
     }
 
     BigInt BigInt::multiply_to_len(unsigned int * mag_one, unsigned short len_one, unsigned int * mag_two, unsigned short len_two, bool sign) {
-        // z = new int[xlen+ylen];
         unsigned short result_length = len_one + len_two;
         unsigned int result_magnitude[result_length];
         for (int i = 0; i < result_length; i++) {
@@ -309,25 +297,23 @@ namespace math {
         ) {
             return BigInt();
         }
-        if (magnitude_length == 1 && *magnitude_pointer == 1) {
-            return BigInt(other.magnitude_pointer, other.magnitude_length, sign != other.sign);
-        }
-        if (other.magnitude_length == 1 && *other.magnitude_pointer == 1) {
-            return BigInt(magnitude_pointer, magnitude_length, sign != other.sign);
-        }
         if (magnitude_length < KARATSUBA_THRESHOLD || other.magnitude_length < KARATSUBA_THRESHOLD) {
             if (other.magnitude_length == 1) {
-                return BigInt::multiply_by_int(magnitude_pointer, magnitude_length, *other.magnitude_pointer, sign != other.sign);
+                return BigInt::multiply_by_long(magnitude_pointer, magnitude_length, *other.magnitude_pointer, sign != other.sign);
             }
 
             if (magnitude_length == 1) {
-                return BigInt::multiply_by_int(other.magnitude_pointer, other.magnitude_length, *magnitude_pointer, sign != other.sign);
+                return BigInt::multiply_by_long(other.magnitude_pointer, other.magnitude_length, *magnitude_pointer, sign != other.sign);
             }
 
             return BigInt::multiply_to_len(magnitude_pointer, magnitude_length, other.magnitude_pointer, other.magnitude_length, sign != other.sign);
         }
         return BigInt();
     }
+
+    // private static void reportOverflow() {
+    //     throw new ArithmeticException("BigInteger would overflow supported range");
+    // }
 
 // /**
 //  * Returns a BigInteger whose value is {@code (this * val)}.  If
