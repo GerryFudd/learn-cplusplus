@@ -353,51 +353,6 @@ namespace math {
         return BigInt(other.magnitude_pointer, index, other.sign);
     }
 
-// /**
-//  * Multiplies two BigIntegers using the Karatsuba multiplication
-//  * algorithm.  This is a recursive divide-and-conquer algorithm which is
-//  * more efficient for large numbers than what is commonly called the
-//  * "grade-school" algorithm used in multiplyToLen.  If the numbers to be
-//  * multiplied have length n, the "grade-school" algorithm has an
-//  * asymptotic complexity of O(n^2).  In contrast, the Karatsuba algorithm
-//  * has complexity of O(n^(log2(3))), or O(n^1.585).  It achieves this
-//  * increased performance by doing 3 multiplies instead of 4 when
-//  * evaluating the product.  As it has some overhead, should be used when
-//  * both numbers are larger than a certain threshold (found
-//  * experimentally).
-//  *
-//  * See:  http://en.wikipedia.org/wiki/Karatsuba_algorithm
-//  */
-// private static BigInteger multiplyKaratsuba(BigInteger x, BigInteger y) {
-//     int xlen = x.mag.length;
-//     int ylen = y.mag.length;
-
-//     // The number of ints in each half of the number.
-//     int half = (Math.max(xlen, ylen)+1) / 2;
-
-//     // xl and yl are the lower halves of x and y respectively,
-//     // xh and yh are the upper halves.
-//     BigInteger xl = x.getLower(half);
-//     BigInteger xh = x.getUpper(half);
-//     BigInteger yl = y.getLower(half);
-//     BigInteger yh = y.getUpper(half);
-
-//     BigInteger p1 = xh.multiply(yh);  // p1 = xh*yh
-//     BigInteger p2 = xl.multiply(yl);  // p2 = xl*yl
-
-//     // p3=(xh+xl)*(yh+yl)
-//     BigInteger p3 = xh.add(xl).multiply(yh.add(yl));
-
-//     // result = p1 * 2^(32*2*half) + (p3 - p1 - p2) * 2^(32*half) + p2
-//     BigInteger result = p1.shiftLeft(32*half).add(p3.subtract(p1).subtract(p2)).shiftLeft(32*half).add(p2);
-
-//     if (x.signum != y.signum) {
-//         return result.negate();
-//     } else {
-//         return result;
-//     }
-// }
-
     BigInt BigInt::shift(int distance) {
         if (magnitude_length == 1 && *magnitude_pointer == 0) {
             return BigInt();
@@ -462,62 +417,6 @@ namespace math {
     // private static void reportOverflow() {
     //     throw new ArithmeticException("BigInteger would overflow supported range");
     // }
-
-// /**
-//  * Returns a BigInteger whose value is {@code (this * val)}.  If
-//  * the invocation is recursive certain overflow checks are skipped.
-//  *
-//  * @param  val value to be multiplied by this BigInteger.
-//  * @param  isRecursion whether this is a recursive invocation
-//  * @return {@code this * val}
-//  */
-// private BigInteger multiply(BigInteger val, boolean isRecursion) {
-
-//             //
-//             // In "Hacker's Delight" section 2-13, p.33, it is explained
-//             // that if x and y are unsigned 32-bit quantities and m and n
-//             // are their respective numbers of leading zeros within 32 bits,
-//             // then the number of leading zeros within their product as a
-//             // 64-bit unsigned quantity is either m + n or m + n + 1. If
-//             // their product is not to overflow, it cannot exceed 32 bits,
-//             // and so the number of leading zeros of the product within 64
-//             // bits must be at least 32, i.e., the leftmost set bit is at
-//             // zero-relative position 31 or less.
-//             //
-//             // From the above there are three cases:
-//             //
-//             //     m + n    leftmost set bit    condition
-//             //     -----    ----------------    ---------
-//             //     >= 32    x <= 64 - 32 = 32   no overflow
-//             //     == 31    x >= 64 - 32 = 32   possible overflow
-//             //     <= 30    x >= 64 - 31 = 33   definite overflow
-//             //
-//             // The "possible overflow" condition cannot be detected by
-//             // examning data lengths alone and requires further calculation.
-//             //
-//             // By analogy, if 'this' and 'val' have m and n as their
-//             // respective numbers of leading zeros within 32*MAX_MAG_LENGTH
-//             // bits, then:
-//             //
-//             //     m + n >= 32*MAX_MAG_LENGTH        no overflow
-//             //     m + n == 32*MAX_MAG_LENGTH - 1    possible overflow
-//             //     m + n <= 32*MAX_MAG_LENGTH - 2    definite overflow
-//             //
-//             // Note however that if the number of ints in the result
-//             // were to be MAX_MAG_LENGTH and mag[0] < 0, then there would
-//             // be overflow. As a result the leftmost bit (of mag[0]) cannot
-//             // be used and the constraints must be adjusted by one bit to:
-//             //
-//             //     m + n >  32*MAX_MAG_LENGTH        no overflow
-//             //     m + n == 32*MAX_MAG_LENGTH        possible overflow
-//             //     m + n <  32*MAX_MAG_LENGTH        definite overflow
-//             //
-//             // The foregoing leading zero-based discussion is for clarity
-//             // only. The actual calculations use the estimated bit length
-//             // of the product as this is more natural to the internal
-//             // array representation of the magnitude which has no leading
-//             // zero elements.
-//             //
 //             if (!isRecursion) {
 //                 // The bitLength() instance method is not used here as we
 //                 // are only considering the magnitudes as non-negative. The
@@ -531,7 +430,6 @@ namespace math {
 //             }
 
 //             return multiplyToomCook3(this, val);
-// }
     
     BigInt BigInt::operator* (const BigInt& other) {
         return mult(other, false);
