@@ -21,6 +21,14 @@ namespace math {
     const unsigned int conversion_quotient = 0x4;
     const unsigned int conversion_remainder = 0x1194d800;
 
+    /**
+     * The threshold value for using Karatsuba multiplication.  If the number
+     * of ints in both mag arrays are greater than this number, then
+     * Karatsuba multiplication will be used.   This value is found
+     * experimentally to work well.
+     */
+    const unsigned short BigInt::KARATSUBA_THRESHOLD = 80;
+
     BigInt::BigInt () {
         magnitude_pointer = new unsigned int [1];
         magnitude_pointer[0] = 0;
@@ -224,6 +232,76 @@ namespace math {
         return BigInt(magnitude_pointer, magnitude_length, false);
     }
 
+    // private static void reportOverflow() {
+    //     throw new ArithmeticException("BigInteger would overflow supported range");
+    // }
+
+// private static BigInteger multiplyByInt(int[] x, int y, int sign) {
+//     if (Integer.bitCount(y) == 1) {
+//         return new BigInteger(shiftLeft(x,Integer.numberOfTrailingZeros(y)), sign);
+//     }
+//     int xlen = x.length;
+//     int[] rmag =  new int[xlen + 1];
+//     long carry = 0;
+//     long yl = y & LONG_MASK;
+//     int rstart = rmag.length - 1;
+//     for (int i = xlen - 1; i >= 0; i--) {
+//         long product = (x[i] & LONG_MASK) * yl + carry;
+//         rmag[rstart--] = (int)product;
+//         carry = product >>> 32;
+//     }
+//     if (carry == 0L) {
+//         rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
+//     } else {
+//         rmag[rstart] = (int)carry;
+//     }
+//     return new BigInteger(rmag, sign);
+// }
+
+    BigInt BigInt::multiply_by_int(unsigned int * magnitude, unsigned short len, unsigned int val, bool sign) {
+
+        return BigInt();
+    }
+
+    BigInt BigInt::multiply_to_len(unsigned int * mag_one, unsigned short len_one, unsigned int * mag_two, unsigned short len_two, bool sign) {
+        // z = new int[xlen+ylen];
+        unsigned short result_length = len_one + len_two;
+        unsigned int result_magnitude[result_length];
+        for (int i = 0; i < result_length; i++) {
+            result_magnitude[i] = 0;
+        }
+
+        unsigned long current_val, overflow = 0;
+        for (int i = 0; i < len_one; i++) {
+            current_val = ((unsigned long)*(mag_one + i))
+                    * ((unsigned long)*mag_two)
+                    + overflow;
+            result_magnitude[i] = (unsigned int) current_val;
+            overflow = current_val >> 32;
+        }
+        result_magnitude[len_one] = (unsigned int) overflow;
+        for (int j = 1; j < len_two; j++) {
+            overflow = 0;
+            for (int k = 0; k < len_one; k++) {
+                current_val = ((unsigned long)*(mag_one + k))
+                    * ((unsigned long)*(mag_two + j))
+                    + ((unsigned long)result_magnitude[j + k])
+                    + overflow;
+                result_magnitude[j + k] = (unsigned int) current_val;
+                overflow = current_val >> 32;
+            }
+            result_magnitude[len_one + len_two - 1] = overflow;
+        }
+        while (result_magnitude[result_length - 1] == 0)
+        {
+            if (result_length == 0) {
+                return BigInt();
+            }
+            result_length--;
+        }
+        return BigInt(result_magnitude, result_length, sign);
+    }
+
     BigInt BigInt::mult(const BigInt& other, bool is_recursion) {
         if (
             (magnitude_length == 1 && *magnitude_pointer == 0) 
@@ -237,42 +315,18 @@ namespace math {
         if (other.magnitude_length == 1 && *other.magnitude_pointer == 1) {
             return BigInt(magnitude_pointer, magnitude_length, sign != other.sign);
         }
-        unsigned short result_length = magnitude_length + other.magnitude_length + 2;
-        unsigned int result_magnitude[result_length];
-        for (int i = 0; i < result_length; i++) {
-            result_magnitude[i] = 0;
-        }
-
-        unsigned short t_cursor = 0, o_cursor, cursor_next;
-        unsigned long current_val;
-        while (t_cursor < magnitude_length) {
-            o_cursor = 0;
-            while (o_cursor < other.magnitude_length) {
-                cursor_next = 0;
-                current_val = ((unsigned long)*(magnitude_pointer + t_cursor))
-                    * ((unsigned long)*(other.magnitude_pointer + o_cursor))
-                    + ((unsigned long) result_magnitude[t_cursor + o_cursor]);
-
-                result_magnitude[t_cursor + o_cursor] = (unsigned int) current_val;
-                current_val = current_val >> 32;
-                while (current_val != 0) {
-                    cursor_next++;
-                    current_val += result_magnitude[t_cursor + o_cursor + cursor_next];
-                    result_magnitude[t_cursor + o_cursor + cursor_next] = (unsigned int) current_val;
-                    current_val = current_val >> 32;
-                }
-                o_cursor++;
+        if (magnitude_length < KARATSUBA_THRESHOLD || other.magnitude_length < KARATSUBA_THRESHOLD) {
+            if (other.magnitude_length == 1) {
+                return BigInt::multiply_by_int(magnitude_pointer, magnitude_length, *other.magnitude_pointer, sign != other.sign);
             }
-            t_cursor++;
-        }
-        while (result_magnitude[result_length - 1] == 0)
-        {
-            if (result_length == 0) {
-                return BigInt();
+
+            if (magnitude_length == 1) {
+                return BigInt::multiply_by_int(other.magnitude_pointer, other.magnitude_length, *magnitude_pointer, sign != other.sign);
             }
-            result_length--;
+
+            return BigInt::multiply_to_len(magnitude_pointer, magnitude_length, other.magnitude_pointer, other.magnitude_length, sign != other.sign);
         }
-        return BigInt(result_magnitude, result_length, sign != other.sign);
+        return BigInt();
     }
 
 // /**
@@ -284,30 +338,7 @@ namespace math {
 //  * @return {@code this * val}
 //  */
 // private BigInteger multiply(BigInteger val, boolean isRecursion) {
-//     if (val.signum == 0 || signum == 0)
-//         return ZERO;
 
-//     int xlen = mag.length;
-
-//     if (val == this && xlen > MULTIPLY_SQUARE_THRESHOLD) {
-//         return square();
-//     }
-
-//     int ylen = val.mag.length;
-
-//     if ((xlen < KARATSUBA_THRESHOLD) || (ylen < KARATSUBA_THRESHOLD)) {
-//         int resultSign = signum == val.signum ? 1 : -1;
-//         if (val.mag.length == 1) {
-//             return multiplyByInt(mag,val.mag[0], resultSign);
-//         }
-//         if (mag.length == 1) {
-//             return multiplyByInt(val.mag,mag[0], resultSign);
-//         }
-//         int[] result = multiplyToLen(mag, xlen,
-//                                         val.mag, ylen, null);
-//         result = trustedStripLeadingZeroInts(result);
-//         return new BigInteger(result, resultSign);
-//     } else {
 //         if ((xlen < TOOM_COOK_THRESHOLD) && (ylen < TOOM_COOK_THRESHOLD)) {
 //             return multiplyKaratsuba(this, val);
 //         } else {

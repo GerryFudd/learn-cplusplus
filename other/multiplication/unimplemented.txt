@@ -34,30 +34,9 @@
 //  * @return {@code this * val}
 //  */
 // private BigInteger multiply(BigInteger val, boolean isRecursion) {
-//     if (val.signum == 0 || signum == 0)
-//         return ZERO;
+    ...
 
-//     int xlen = mag.length;
-
-//     if (val == this && xlen > MULTIPLY_SQUARE_THRESHOLD) {
-//         return square();
-//     }
-
-//     int ylen = val.mag.length;
-
-//     if ((xlen < KARATSUBA_THRESHOLD) || (ylen < KARATSUBA_THRESHOLD)) {
-//         int resultSign = signum == val.signum ? 1 : -1;
-//         if (val.mag.length == 1) {
-//             return multiplyByInt(mag,val.mag[0], resultSign);
-//         }
-//         if (mag.length == 1) {
-//             return multiplyByInt(val.mag,mag[0], resultSign);
-//         }
-//         int[] result = multiplyToLen(mag, xlen,
-//                                         val.mag, ylen, null);
-//         result = trustedStripLeadingZeroInts(result);
-//         return new BigInteger(result, resultSign);
-//     } else {
+//     else {
 //         if ((xlen < TOOM_COOK_THRESHOLD) && (ylen < TOOM_COOK_THRESHOLD)) {
 //             return multiplyKaratsuba(this, val);
 //         } else {
@@ -123,32 +102,6 @@
 //     }
 // }
 
-    private static void reportOverflow() {
-        throw new ArithmeticException("BigInteger would overflow supported range");
-    }
-
-// private static BigInteger multiplyByInt(int[] x, int y, int sign) {
-//     if (Integer.bitCount(y) == 1) {
-//         return new BigInteger(shiftLeft(x,Integer.numberOfTrailingZeros(y)), sign);
-//     }
-//     int xlen = x.length;
-//     int[] rmag =  new int[xlen + 1];
-//     long carry = 0;
-//     long yl = y & LONG_MASK;
-//     int rstart = rmag.length - 1;
-//     for (int i = xlen - 1; i >= 0; i--) {
-//         long product = (x[i] & LONG_MASK) * yl + carry;
-//         rmag[rstart--] = (int)product;
-//         carry = product >>> 32;
-//     }
-//     if (carry == 0L) {
-//         rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
-//     } else {
-//         rmag[rstart] = (int)carry;
-//     }
-//     return new BigInteger(rmag, sign);
-// }
-
 // /**
 //  * Package private methods used by BigDecimal code to multiply a BigInteger
 //  * with a long. Assumes v is not equal to INFLATED.
@@ -189,59 +142,6 @@
 //     if (carry == 0L)
 //         rmag = java.util.Arrays.copyOfRange(rmag, 1, rmag.length);
 //     return new BigInteger(rmag, rsign);
-// }
-
-// /**
-//  * Multiplies int arrays x and y to the specified lengths and places
-//  * the result into z. There will be no leading zeros in the resultant array.
-//  */
-// private static int[] multiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {
-//     multiplyToLenCheck(x, xlen);
-//     multiplyToLenCheck(y, ylen);
-//     return implMultiplyToLen(x, xlen, y, ylen, z);
-// }
-
-// @HotSpotIntrinsicCandidate
-// private static int[] implMultiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {
-//     int xstart = xlen - 1;
-//     int ystart = ylen - 1;
-
-//     if (z == null || z.length < (xlen+ ylen))
-//             z = new int[xlen+ylen];
-
-//     long carry = 0;
-//     for (int j=ystart, k=ystart+1+xstart; j >= 0; j--, k--) {
-//         long product = (y[j] & LONG_MASK) *
-//                         (x[xstart] & LONG_MASK) + carry;
-//         z[k] = (int)product;
-//         carry = product >>> 32;
-//     }
-//     z[xstart] = (int)carry;
-
-//     for (int i = xstart-1; i >= 0; i--) {
-//         carry = 0;
-//         for (int j=ystart, k=ystart+1+i; j >= 0; j--, k--) {
-//             long product = (y[j] & LONG_MASK) *
-//                             (x[i] & LONG_MASK) +
-//                             (z[k] & LONG_MASK) + carry;
-//             z[k] = (int)product;
-//             carry = product >>> 32;
-//         }
-//         z[i] = (int)carry;
-//     }
-//     return z;
-// }
-
-// private static void multiplyToLenCheck(int[] array, int length) {
-//     if (length <= 0) {
-//         return;  // not an error because multiplyToLen won't execute if len <= 0
-//     }
-
-//     Objects.requireNonNull(array);
-
-//     if (length > array.length) {
-//         throw new ArrayIndexOutOfBoundsException(length - 1);
-//     }
 // }
 
 // /**

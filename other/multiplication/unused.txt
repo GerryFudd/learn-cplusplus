@@ -1,0 +1,23 @@
+
+
+// private static void multiplyToLenCheck(int[] array, int length) {
+//     if (length <= 0) {
+//         return;  // not an error because multiplyToLen won't execute if len <= 0
+//     }
+
+//     Objects.requireNonNull(array);
+
+//     if (length > array.length) {
+//         throw new ArrayIndexOutOfBoundsException(length - 1);
+//     }
+// }
+
+// /**
+//  * Multiplies int arrays x and y to the specified lengths and places
+//  * the result into z. There will be no leading zeros in the resultant array.
+//  */
+// private static int[] multiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {
+//     multiplyToLenCheck(x, xlen);
+//     multiplyToLenCheck(y, ylen);
+//     return implMultiplyToLen(x, xlen, y, ylen, z);
+// }

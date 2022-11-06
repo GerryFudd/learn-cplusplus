@@ -12,3 +12,40 @@
 // public BigInteger multiply(BigInteger val) {
 //     return multiply(val, false);
 // }
+
+// private BigInteger multiply(BigInteger val, boolean isRecursion) {
+//     if (val.signum == 0 || signum == 0)
+//         return ZERO;
+        ...
+   }
+
+// @HotSpotIntrinsicCandidate
+// private static int[] implMultiplyToLen(int[] x, int xlen, int[] y, int ylen, int[] z) {
+//     int xstart = xlen - 1;
+//     int ystart = ylen - 1;
+
+//     if (z == null || z.length < (xlen+ ylen))
+//             z = new int[xlen+ylen];
+
+//     long carry = 0;
+//     for (int j=ystart, k=ystart+1+xstart; j >= 0; j--, k--) {
+//         long product = (y[j] & LONG_MASK) *
+//                         (x[xstart] & LONG_MASK) + carry;
+//         z[k] = (int)product;
+//         carry = product >>> 32;
+//     }
+//     z[xstart] = (int)carry;
+
+//     for (int i = xstart-1; i >= 0; i--) {
+//         carry = 0;
+//         for (int j=ystart, k=ystart+1+i; j >= 0; j--, k--) {
+//             long product = (y[j] & LONG_MASK) *
+//                             (x[i] & LONG_MASK) +
+//                             (z[k] & LONG_MASK) + carry;
+//             z[k] = (int)product;
+//             carry = product >>> 32;
+//         }
+//         z[i] = (int)carry;
+//     }
+//     return z;
+// }

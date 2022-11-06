@@ -6,6 +6,7 @@ using namespace std;
 
 namespace math {
     class BigInt {
+        static const unsigned short KARATSUBA_THRESHOLD;
         // Pointer to unsigned int so that magnitude can be variable size
         unsigned int * magnitude_pointer;
         unsigned short magnitude_length;
@@ -15,6 +16,8 @@ namespace math {
         BigInt do_sub(unsigned int *, unsigned short);
         static BigInt sub_from_larger(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
         BigInt mult (const BigInt&, bool);
+        static BigInt multiply_by_int(unsigned int *, unsigned short, unsigned int, bool);
+        static BigInt multiply_to_len(unsigned int *, unsigned short, unsigned int *, unsigned short, bool);
     public:
         BigInt();
         ~BigInt();
