@@ -81,6 +81,7 @@ namespace math {
         delete []magnitude_pointer;
     }
 
+    // ********** BEGIN string **********
     string BigInt::as_decimal_string() {
         string result = "";
         unsigned short last_unprocessed_place = magnitude_length - 1;
@@ -146,7 +147,42 @@ namespace math {
         }
         return result;
     }
+    // ********** END string **********
 
+    // ********** BEGIN self **********
+    BigInt BigInt::operator- () {
+        return BigInt(magnitude_pointer, magnitude_length, !sign);
+    }
+
+    BigInt BigInt::abs () {
+        return BigInt(magnitude_pointer, magnitude_length, false);
+    }
+    // ********** END self **********
+
+    // ********** BEGIN bitwise-ish **********
+    BigInt BigInt::shift(int distance) {
+        if (magnitude_length == 1 && *magnitude_pointer == 0) {
+            return BigInt();
+        }
+        if (distance <= 0) {
+            if (magnitude_length <= -distance) {
+                return BigInt();
+            }
+            return BigInt(magnitude_pointer - distance, magnitude_length + distance, sign);
+        }
+        unsigned int * result = new unsigned int[distance + magnitude_length];
+        for (int i = 0; i < distance + magnitude_length; i++) {
+            if (i < distance) {
+                result[i] = 0;
+            } else {
+                result[i] = *(magnitude_pointer + i - distance);
+            }
+        }
+        return BigInt(result, (unsigned short) distance + magnitude_length, sign);
+    }
+    // ********** END bitwise-ish **********
+
+    // ********** BEGIN comparison **********
     bool BigInt::equals (const BigInt& other) {
         if (sign != other.sign) {
             return false;
@@ -162,7 +198,9 @@ namespace math {
         }
         return true;
     }
-    
+    // ********** END comparison **********
+
+    // ********** BEGIN sum **********
     BigInt BigInt::do_add(unsigned int * other_magnitude, unsigned short other_length) {
         unsigned int * larger_mag;
         unsigned short larger_length, smaller_length;
@@ -200,16 +238,27 @@ namespace math {
         return BigInt(result_magnitude, cursor, sign);
     }
 
+    BigInt BigInt::operator+ (const BigInt& other) {
+        if (sign != other.sign) {
+            return do_sub(other.magnitude_pointer, other.magnitude_length);
+        }
+        return do_add(other.magnitude_pointer, other.magnitude_length);
+    }
+    // ********** END sum **********
+
+    // ********** BEGIN difference **********
     BigInt BigInt::sub_from_larger(unsigned int * larger_mag, unsigned short larger_len, unsigned int * smaller_mag, unsigned short smaller_len, bool sign) {
         unsigned short cursor = 0;
-        unsigned short result_length = 0;
         unsigned int result_magnitude[larger_len];
         unsigned short overflow = 0;
 
         while (cursor < smaller_len)
         {
             result_magnitude[cursor] = *(larger_mag + cursor) - *(smaller_mag + cursor) - overflow;
-            if (*(larger_mag + cursor) < *(smaller_mag + cursor)) {
+            if (
+                (overflow == 1 && *(larger_mag + cursor) == *(smaller_mag + cursor))
+                || *(larger_mag + cursor) < *(smaller_mag + cursor)
+            ) {
                 overflow = 1;
             } else {
                 overflow = 0;
@@ -257,48 +306,15 @@ namespace math {
         return BigInt::sub_from_larger(other_magnitude, other_length, magnitude_pointer, magnitude_length, !sign);
     }
 
-    BigInt BigInt::operator+ (const BigInt& other) {
-        if (sign != other.sign) {
-            return do_sub(other.magnitude_pointer, other.magnitude_length);
-        }
-        return do_add(other.magnitude_pointer, other.magnitude_length);
-    }
-
     BigInt BigInt::operator- (const BigInt& other) {
         if (sign != other.sign) {
             return do_add(other.magnitude_pointer, other.magnitude_length);
         }
         return do_sub(other.magnitude_pointer, other.magnitude_length);
     }
+    // ********** END difference **********
 
-    BigInt BigInt::operator- () {
-        return BigInt(magnitude_pointer, magnitude_length, !sign);
-    }
-
-    BigInt BigInt::abs () {
-        return BigInt(magnitude_pointer, magnitude_length, false);
-    }
-
-    BigInt BigInt::multiply_by_long(unsigned int * magnitude, unsigned short len, unsigned long val, bool sign) {
-        unsigned int result[len + 1];
-        unsigned long current, overflow = 0;
-
-        for (int i = 0; i < len; i++) {
-            current = ((unsigned long) *(magnitude + i)) * val + overflow;
-            result[i] = (unsigned int) current;
-            overflow = current >> 32;
-        }
-        result[len] = overflow;
-        unsigned short result_len = len + 1;
-        while (result[result_len - 1] == 0) {
-            if (result_len == 1) {
-                return BigInt();
-            }
-            result_len--;
-        }
-        return BigInt(result, result_len, sign);
-    }
-
+    // ********** BEGIN product **********
     BigInt BigInt::multiply_to_len(unsigned int * mag_one, unsigned short len_one, unsigned int * mag_two, unsigned short len_two, bool sign) {
         unsigned short result_length = len_one + len_two;
         unsigned int result_magnitude[result_length];
@@ -337,6 +353,26 @@ namespace math {
         return BigInt(result_magnitude, result_length, sign);
     }
 
+    BigInt BigInt::multiply_by_long(unsigned int * magnitude, unsigned short len, unsigned long val, bool sign) {
+        unsigned int result[len + 1];
+        unsigned long current, overflow = 0;
+
+        for (int i = 0; i < len; i++) {
+            current = ((unsigned long) *(magnitude + i)) * val + overflow;
+            result[i] = (unsigned int) current;
+            overflow = current >> 32;
+        }
+        result[len] = overflow;
+        unsigned short result_len = len + 1;
+        while (result[result_len - 1] == 0) {
+            if (result_len == 1) {
+                return BigInt();
+            }
+            result_len--;
+        }
+        return BigInt(result, result_len, sign);
+    }
+
     BigInt BigInt::get_upper(const BigInt& other, unsigned short index) {
         if (other.magnitude_length <= index + 1) {
             return BigInt();
@@ -353,41 +389,31 @@ namespace math {
         return BigInt(other.magnitude_pointer, index, other.sign);
     }
 
-    BigInt BigInt::shift(int distance) {
-        if (magnitude_length == 1 && *magnitude_pointer == 0) {
-            return BigInt();
-        }
-        if (distance <= 0) {
-            if (magnitude_length <= -distance) {
-                return BigInt();
-            }
-            return BigInt(magnitude_pointer - distance, magnitude_length + distance, sign);
-        }
-        unsigned int * result = new unsigned int[distance + magnitude_length];
-        for (int i = 0; i < distance + magnitude_length; i++) {
-            if (i < distance) {
-                result[i] = 0;
-            } else {
-                result[i] = *(magnitude_pointer + i - distance);
-            }
-        }
-        return BigInt(result, (unsigned short) distance + magnitude_length, sign);
-    }
-
     BigInt BigInt::multiply_karatsuba(const BigInt& other) {
         unsigned short half_len = ((unsigned int)max(magnitude_length, other.magnitude_length) + 1) / 2;
+        // tl = this % 2^(32*half_len)
         BigInt tl = BigInt::get_lower(*this, half_len);
+        // tu = this // 2^(32*half_len)
         BigInt tu = BigInt::get_upper(*this, half_len);
+        // this = tu*2^(32*half_len) + tl
 
+        // ol = other % 2^(32*half_len)
         BigInt ol = other.get_lower(other, half_len);
+        // ou = other // 2^(32*half_len)
         BigInt ou = other.get_upper(other, half_len);
+        // other = ou*2^(32*half_len) + ol
 
         BigInt uu = tu * ou;
         BigInt ll = tl * ol;
-        BigInt ul = tu * ol;
-        BigInt lu = tl * ou;
 
-        return uu.shift(half_len * 2) + ul.shift(half_len) + lu.shift(half_len) + ll;
+        //           mid = (tu + tl) * (ou + ol) - uu - ll
+        //               = tu * ol + tl * ou
+        BigInt mid = (tu + tl) * (ou + ol) - uu - ll;
+
+        // this * other = (tu*2^(32*half_len) + tl)*(ou*2^(32*half_len) + ol)
+        //              = uu*2^(32*half_len*2) + (tu*ol + tl*ou)*2^(32*half_len) + ll
+        // return uu.shift(half_len * 2) + (mid - uu - ll).shift(half_len) + ll;
+        return uu.shift(half_len << 1) + mid.shift(half_len) + ll;
     }
 
     BigInt BigInt::mult(const BigInt& other, bool is_recursion) {
@@ -434,4 +460,5 @@ namespace math {
     BigInt BigInt::operator* (const BigInt& other) {
         return mult(other, false);
     }
+    // ********** END product **********
 }
