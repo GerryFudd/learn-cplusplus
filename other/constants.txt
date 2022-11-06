@@ -18,31 +18,6 @@
     private static final  int PRIME_SEARCH_BIT_LENGTH_LIMIT = 500000000;
 
     /**
-     * The threshold value for using 3-way Toom-Cook multiplication.
-     * If the number of ints in each mag array is greater than the
-     * Karatsuba threshold, and the number of ints in at least one of
-     * the mag arrays is greater than this threshold, then Toom-Cook
-     * multiplication will be used.
-     */
-    private static final int TOOM_COOK_THRESHOLD = 240;
-
-    /**
-     * The threshold value for using Karatsuba squaring.  If the number
-     * of ints in the number are larger than this value,
-     * Karatsuba squaring will be used.   This value is found
-     * experimentally to work well.
-     */
-    private static final int KARATSUBA_SQUARE_THRESHOLD = 128;
-
-    /**
-     * The threshold value for using Toom-Cook squaring.  If the number
-     * of ints in the number are larger than this value,
-     * Toom-Cook squaring will be used.   This value is found
-     * experimentally to work well.
-     */
-    private static final int TOOM_COOK_SQUARE_THRESHOLD = 216;
-
-    /**
      * The threshold value for using Burnikel-Ziegler division.  If the number
      * of ints in the divisor are larger than this value, Burnikel-Ziegler
      * division may be used.  This value is found experimentally to work well.

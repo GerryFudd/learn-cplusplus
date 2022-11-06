@@ -29,6 +29,31 @@ namespace math {
      */
     const unsigned short BigInt::KARATSUBA_THRESHOLD = 80;
 
+    /**
+     * The threshold value for using Karatsuba squaring.  If the number
+     * of ints in the number are larger than this value,
+     * Karatsuba squaring will be used.   This value is found
+     * experimentally to work well.
+     */
+    // const unsigned short BigInt::KARATSUBA_SQUARE_THRESHOLD = 128;
+
+    /**
+     * The threshold value for using 3-way Toom-Cook multiplication.
+     * If the number of ints in each mag array is greater than the
+     * Karatsuba threshold, and the number of ints in at least one of
+     * the mag arrays is greater than this threshold, then Toom-Cook
+     * multiplication will be used.
+     */
+    const unsigned short BigInt::TOOM_COOK_THRESHOLD = 240;
+
+    /**
+     * The threshold value for using Toom-Cook squaring.  If the number
+     * of ints in the number are larger than this value,
+     * Toom-Cook squaring will be used.   This value is found
+     * experimentally to work well.
+     */
+    // const unsigned short BigInt::TOOM_COOK_SQUARE_THRESHOLD = 216;
+
     BigInt::BigInt () {
         magnitude_pointer = new unsigned int [1];
         magnitude_pointer[0] = 0;
@@ -95,6 +120,28 @@ namespace math {
         if (result == "") {
             result = "0";
         } else if (sign) {
+            result = "-" + result;
+        }
+        return result;
+    }
+
+    string BigInt::as_hex_string() {
+        string result = "0x";
+        char hex_block[9];
+        unsigned int block;
+        for (int i = magnitude_length - 1; i >= 0; i--) {
+        snprintf(hex_block, 9, "%x", *(magnitude_pointer + i));
+        string current_block = string(hex_block);
+        if (result.length() > 2) {
+            result.append(string(8-current_block.length(), '0'));
+        }
+        result.append(current_block);
+        }
+        if (result == "0x") {
+            return "0x0";
+        }
+
+        if (sign) {
             result = "-" + result;
         }
         return result;
@@ -278,7 +325,7 @@ namespace math {
                 result_magnitude[j + k] = (unsigned int) current_val;
                 overflow = current_val >> 32;
             }
-            result_magnitude[len_one + len_two - 1] = overflow;
+            result_magnitude[len_one + j] = overflow;
         }
         while (result_magnitude[result_length - 1] == 0)
         {
@@ -288,6 +335,104 @@ namespace math {
             result_length--;
         }
         return BigInt(result_magnitude, result_length, sign);
+    }
+
+    BigInt BigInt::get_upper(const BigInt& other, unsigned short index) {
+        if (other.magnitude_length <= index + 1) {
+            return BigInt();
+        }
+
+        return BigInt(other.magnitude_pointer + index, other.magnitude_length - index, other.sign);
+    }
+
+    BigInt BigInt::get_lower(const BigInt& other, unsigned short index) {
+        if (other.magnitude_length <= index) {
+            return BigInt(other.magnitude_pointer, other.magnitude_length, other.sign);
+        }
+
+        return BigInt(other.magnitude_pointer, index, other.sign);
+    }
+
+// /**
+//  * Multiplies two BigIntegers using the Karatsuba multiplication
+//  * algorithm.  This is a recursive divide-and-conquer algorithm which is
+//  * more efficient for large numbers than what is commonly called the
+//  * "grade-school" algorithm used in multiplyToLen.  If the numbers to be
+//  * multiplied have length n, the "grade-school" algorithm has an
+//  * asymptotic complexity of O(n^2).  In contrast, the Karatsuba algorithm
+//  * has complexity of O(n^(log2(3))), or O(n^1.585).  It achieves this
+//  * increased performance by doing 3 multiplies instead of 4 when
+//  * evaluating the product.  As it has some overhead, should be used when
+//  * both numbers are larger than a certain threshold (found
+//  * experimentally).
+//  *
+//  * See:  http://en.wikipedia.org/wiki/Karatsuba_algorithm
+//  */
+// private static BigInteger multiplyKaratsuba(BigInteger x, BigInteger y) {
+//     int xlen = x.mag.length;
+//     int ylen = y.mag.length;
+
+//     // The number of ints in each half of the number.
+//     int half = (Math.max(xlen, ylen)+1) / 2;
+
+//     // xl and yl are the lower halves of x and y respectively,
+//     // xh and yh are the upper halves.
+//     BigInteger xl = x.getLower(half);
+//     BigInteger xh = x.getUpper(half);
+//     BigInteger yl = y.getLower(half);
+//     BigInteger yh = y.getUpper(half);
+
+//     BigInteger p1 = xh.multiply(yh);  // p1 = xh*yh
+//     BigInteger p2 = xl.multiply(yl);  // p2 = xl*yl
+
+//     // p3=(xh+xl)*(yh+yl)
+//     BigInteger p3 = xh.add(xl).multiply(yh.add(yl));
+
+//     // result = p1 * 2^(32*2*half) + (p3 - p1 - p2) * 2^(32*half) + p2
+//     BigInteger result = p1.shiftLeft(32*half).add(p3.subtract(p1).subtract(p2)).shiftLeft(32*half).add(p2);
+
+//     if (x.signum != y.signum) {
+//         return result.negate();
+//     } else {
+//         return result;
+//     }
+// }
+
+    BigInt BigInt::shift(int distance) {
+        if (magnitude_length == 1 && *magnitude_pointer == 0) {
+            return BigInt();
+        }
+        if (distance <= 0) {
+            if (magnitude_length <= -distance) {
+                return BigInt();
+            }
+            return BigInt(magnitude_pointer - distance, magnitude_length + distance, sign);
+        }
+        unsigned int * result = new unsigned int[distance + magnitude_length];
+        for (int i = 0; i < distance + magnitude_length; i++) {
+            if (i < distance) {
+                result[i] = 0;
+            } else {
+                result[i] = *(magnitude_pointer + i - distance);
+            }
+        }
+        return BigInt(result, (unsigned short) distance + magnitude_length, sign);
+    }
+
+    BigInt BigInt::multiply_karatsuba(const BigInt& other) {
+        unsigned short half_len = ((unsigned int)max(magnitude_length, other.magnitude_length) + 1) / 2;
+        BigInt tl = BigInt::get_lower(*this, half_len);
+        BigInt tu = BigInt::get_upper(*this, half_len);
+
+        BigInt ol = other.get_lower(other, half_len);
+        BigInt ou = other.get_upper(other, half_len);
+
+        BigInt uu = tu * ou;
+        BigInt ll = tl * ol;
+        BigInt ul = tu * ol;
+        BigInt lu = tl * ou;
+
+        return uu.shift(half_len * 2) + ul.shift(half_len) + lu.shift(half_len) + ll;
     }
 
     BigInt BigInt::mult(const BigInt& other, bool is_recursion) {
@@ -308,6 +453,9 @@ namespace math {
 
             return BigInt::multiply_to_len(magnitude_pointer, magnitude_length, other.magnitude_pointer, other.magnitude_length, sign != other.sign);
         }
+        if ((magnitude_length < TOOM_COOK_THRESHOLD) && (other.magnitude_length < TOOM_COOK_THRESHOLD)) {
+            return multiply_karatsuba(other);
+        }
         return BigInt();
     }
 
@@ -325,9 +473,6 @@ namespace math {
 //  */
 // private BigInteger multiply(BigInteger val, boolean isRecursion) {
 
-//         if ((xlen < TOOM_COOK_THRESHOLD) && (ylen < TOOM_COOK_THRESHOLD)) {
-//             return multiplyKaratsuba(this, val);
-//         } else {
 //             //
 //             // In "Hacker's Delight" section 2-13, p.33, it is explained
 //             // that if x and y are unsigned 32-bit quantities and m and n
@@ -386,8 +531,6 @@ namespace math {
 //             }
 
 //             return multiplyToomCook3(this, val);
-//         }
-//     }
 // }
     
     BigInt BigInt::operator* (const BigInt& other) {
