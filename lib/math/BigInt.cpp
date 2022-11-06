@@ -22,22 +22,6 @@ namespace math {
     const unsigned int conversion_remainder = 0x1194d800;
 
     /**
-     * The threshold value for using Karatsuba multiplication.  If the number
-     * of ints in both mag arrays are greater than this number, then
-     * Karatsuba multiplication will be used.   This value is found
-     * experimentally to work well.
-     */
-    const unsigned short BigInt::KARATSUBA_THRESHOLD = 80;
-
-    /**
-     * The threshold value for using Karatsuba squaring.  If the number
-     * of ints in the number are larger than this value,
-     * Karatsuba squaring will be used.   This value is found
-     * experimentally to work well.
-     */
-    // const unsigned short BigInt::KARATSUBA_SQUARE_THRESHOLD = 128;
-
-    /**
      * The threshold value for using 3-way Toom-Cook multiplication.
      * If the number of ints in each mag array is greater than the
      * Karatsuba threshold, and the number of ints in at least one of
@@ -54,6 +38,7 @@ namespace math {
      */
     // const unsigned short BigInt::TOOM_COOK_SQUARE_THRESHOLD = 216;
 
+    // ********** BEGIN constructors & destructors **********
     BigInt::BigInt () {
         magnitude_pointer = new unsigned int [1];
         magnitude_pointer[0] = 0;
@@ -80,9 +65,10 @@ namespace math {
     BigInt::~BigInt () {
         delete []magnitude_pointer;
     }
+    // ********** END constructors & destructors **********
 
     // ********** BEGIN string **********
-    string BigInt::as_decimal_string() {
+    string BigInt::as_decimal_string() const {
         string result = "";
         unsigned short last_unprocessed_place = magnitude_length - 1;
         unsigned int unprocessed_magnitude[magnitude_length];
@@ -126,7 +112,7 @@ namespace math {
         return result;
     }
 
-    string BigInt::as_hex_string() {
+    string BigInt::as_hex_string() const {
         string result = "0x";
         char hex_block[9];
         unsigned int block;
@@ -146,6 +132,10 @@ namespace math {
             result = "-" + result;
         }
         return result;
+    }
+    ostream& operator<<(ostream& os, const BigInt& item) {
+        os << item.as_hex_string();
+        return os;
     }
     // ********** END string **********
 
@@ -183,16 +173,16 @@ namespace math {
     // ********** END bitwise-ish **********
 
     // ********** BEGIN comparison **********
-    bool BigInt::equals (const BigInt& other) {
-        if (sign != other.sign) {
+    bool operator== (const BigInt& first, const BigInt& second) {
+        if (first.sign != second.sign) {
             return false;
         }
 
-        if (magnitude_length != other.magnitude_length) {
+        if (first.magnitude_length != second.magnitude_length) {
             return false;
         }
-        for (int i = 0; i < magnitude_length; i++) {
-            if (*(magnitude_pointer + i) != *(other.magnitude_pointer + i)) {
+        for (int i = 0; i < first.magnitude_length; i++) {
+            if (*(first.magnitude_pointer + i) != *(second.magnitude_pointer + i)) {
                 return false;
             }
         }
@@ -373,6 +363,23 @@ namespace math {
         return BigInt(result, result_len, sign);
     }
 
+    // ****** BEGIN Karitsuba ******
+    /**
+     * The threshold value for using Karatsuba multiplication.  If the number
+     * of ints in both mag arrays are greater than this number, then
+     * Karatsuba multiplication will be used.   This value is found
+     * experimentally to work well.
+     */
+    const unsigned short BigInt::KARATSUBA_THRESHOLD = 80;
+
+    /**
+     * The threshold value for using Karatsuba squaring.  If the number
+     * of ints in the number are larger than this value,
+     * Karatsuba squaring will be used.   This value is found
+     * experimentally to work well.
+     */
+    // const unsigned short BigInt::KARATSUBA_SQUARE_THRESHOLD = 128;
+
     BigInt BigInt::get_upper(const BigInt& other, unsigned short index) {
         if (other.magnitude_length <= index + 1) {
             return BigInt();
@@ -415,6 +422,7 @@ namespace math {
         // return uu.shift(half_len * 2) + (mid - uu - ll).shift(half_len) + ll;
         return uu.shift(half_len << 1) + mid.shift(half_len) + ll;
     }
+    // ****** END Karitsuba ******
 
     BigInt BigInt::mult(const BigInt& other, bool is_recursion) {
         if (

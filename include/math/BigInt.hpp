@@ -30,18 +30,18 @@ namespace math {
         ~BigInt();
         BigInt (unsigned int [], unsigned short, bool);
         BigInt (unsigned int);
-        string as_decimal_string();
-        string as_hex_string();
+        string as_decimal_string() const;
+        string as_hex_string () const;
         BigInt operator + (const BigInt&);
         BigInt operator - (const BigInt&);
         BigInt operator - ();
         BigInt abs();
-        bool equals (const BigInt&);
 
         BigInt operator * (const BigInt&);
+
+        friend bool operator== (const BigInt&, const BigInt&);
+        friend ostream& operator<<(ostream&, const BigInt&);
     };
-
-
 
     class NotImplemented: public exception {
         const char * message;
