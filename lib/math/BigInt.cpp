@@ -116,31 +116,34 @@ namespace math {
     string BigInt::as_hex_string() const {
         // Collect result in a stream
         stringstream hex_stream;
+        
+        hex_stream << *this;
+
+        return hex_stream.str();
+    }
+    
+    ostream& operator<<(ostream& os, const BigInt& item) {
         // If negative, start with that sign
-        if (sign) {
-            hex_stream << '-';
+        if (item.sign) {
+            os << '-';
         }
         // Append hex symbol and first block
-        hex_stream << "0x" << hex << *(magnitude_pointer + magnitude_length - 1);
+        os << "0x" << hex << *(item.magnitude_pointer + item.magnitude_length - 1);
         unsigned int block;
         unsigned short shift_by;
         // Start appending full blocks of eight characters at the second block.
-        for (int i = magnitude_length - 2; i >= 0; i--) {
-            block = *(magnitude_pointer + i);
+        for (int i = item.magnitude_length - 2; i >= 0; i--) {
+            block = *(item.magnitude_pointer + i);
             // Shifting by 4 bits removes the smallest hex value from the string
             // Shift by 7, then 6, etc... and append a leading 0 until there's a non-zero hex value.
             shift_by = 28;
             while (shift_by != 0 && block >> shift_by == 0) {
-                hex_stream << '0';
+                os << '0';
                 shift_by -= 4;
             }
-            hex_stream << hex << block;
+            os << hex << block;
         }
 
-        return hex_stream.str();
-    }
-    ostream& operator<<(ostream& os, const BigInt& item) {
-        os << item.as_hex_string();
         return os;
     }
     // ********** END string **********
