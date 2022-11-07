@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <exception>
 #include <iostream>
+#include <sstream>
 #include <math/BigInt.hpp>
 
 using namespace std;
@@ -113,25 +114,30 @@ namespace math {
     }
 
     string BigInt::as_hex_string() const {
-        string result = "0x";
-        char hex_block[9];
+        // Collect result in a stream
+        stringstream hex_stream;
+        // If negative, start with that sign
+        if (sign) {
+            hex_stream << '-';
+        }
+        // Append hex symbol and first block
+        hex_stream << "0x" << hex << *(magnitude_pointer + magnitude_length - 1);
         unsigned int block;
-        for (int i = magnitude_length - 1; i >= 0; i--) {
-        snprintf(hex_block, 9, "%x", *(magnitude_pointer + i));
-        string current_block = string(hex_block);
-        if (result.length() > 2) {
-            result.append(string(8-current_block.length(), '0'));
-        }
-        result.append(current_block);
-        }
-        if (result == "0x") {
-            return "0x0";
+        unsigned short shift_by;
+        // Start appending full blocks of eight characters at the second block.
+        for (int i = magnitude_length - 2; i >= 0; i--) {
+            block = *(magnitude_pointer + i);
+            // Shifting by 4 bits removes the smallest hex value from the string
+            // Shift by 7, then 6, etc... and append a leading 0 until there's a non-zero hex value.
+            shift_by = 28;
+            while (shift_by != 0 && block >> shift_by == 0) {
+                hex_stream << '0';
+                shift_by -= 4;
+            }
+            hex_stream << hex << block;
         }
 
-        if (sign) {
-            result = "-" + result;
-        }
-        return result;
+        return hex_stream.str();
     }
     ostream& operator<<(ostream& os, const BigInt& item) {
         os << item.as_hex_string();

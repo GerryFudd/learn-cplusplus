@@ -145,14 +145,23 @@ In this example `a, b, c,` and `d` are `int` type objects, `a == -3`, `b == 14`,
 
 #### iostream
 
-The iostream library is used for logging with the `std::cout` command and the `<<` operator. It is even possible to stream non-character data types to standard out without needing type conversions.
+The iostream library is used for logging with the `std::cout` command and the `<<` operator.
 
 ```c++
 int a {-3}, b = 47;
 
 std::cout << a << " > " << b << " is a " 
-    << (a > b) << " statement.";
+  << (a > b) << " statement.";
 // -3 > 47 is a false statement.
+```
+
+Any class that overrides the `operator<<` method can be streamed with `<<`. The signature of this override looks like this.
+
+```c++
+class T {
+public:
+  friend ostream& operator<<(ostream&, const T&);
+}
 ```
 
 #### string
@@ -185,7 +194,11 @@ try {
 }
 ```
 
-## Pointers
+#### chrono
+
+This is the datetime library. It has a  
+
+## Pointers (introduction to...)
 
 A pointer is a one byte number that points to an address in memory. Pointers are declared as a reference to a specific data type so the variable they point to must be the declared type. An `*` in front of a pointer returns the variable that is stored int the address the pointer points to. A pointer is declared as `${type} * ${name}`. An `&` in front of a variable returns the variable's address in memory. If the variable takes up multiple bytes, this returns the address of the first byte.
 
@@ -196,15 +209,17 @@ int c = *b;
 int * d = &c;
 ```
 
-In this example `b != d` but `*b == *d`. 
+In this example `b != d` but `*b == *d`. Likewise `a == c` but `&a != &c`.
 
-## Functions
+## Functions (introduction to...)
+
+### Declaration syntax
 
 A function is declared with a return type and a collection of arguments. This is a function that returns the first index of the given character in the given string or -1 if the character is missing.
 
 ```c++
-int index_of(std::string a, char b) {
-    for (int i = 0; i < a.length(); i++) {
+int index_of(char a[], unsigned short length, char b) {
+    for (int i = 0; i < length; i++) {
         if (a[i] == b) {
             return i;
         }
@@ -213,7 +228,51 @@ int index_of(std::string a, char b) {
 }
 ```
 
-### Arrays
+### Overloading
+
+It is also possible to overload functions with the same name. The following pair of methods will expose a method that behaves identically to the one above but adds another where you can specify the index where you should start searching for the given character.
+
+```c++
+int index_of(char a[], unsigned short length, char b, unsigned short from) {
+    for (unsigned short i = from; i < length; i++) {
+        if (a[i] == b) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int index_of(char a[], unsigned short length, char b) {
+    return index_of(a, length, b, 0);
+}
+```
+
+### Parameters by reference
+
+When a parameter is specified by its type and no modifiers the function references this argument *by value*. When the function is invoked, a copy of this variable is created with the same type and value. Practically this means two things.
+
+1. The function incurs the processing overhead of copying the variable and the copy is stored in a new location in memory.
+1. It is not possible to modify the argument that is passed to the function since it doesn't have a direct reference to the original.
+
+For primitive types such as `int` or `char` the cost of copying the variable is negligible and in most cases it is a feature rather than a bug to avoid mutating the arguments that are passed to your functions.
+
+If the process of copying one of your arguments is unacceptably time consuming or if your function *intends* to mutate one of its arguments, then append the `&` character to the type of that parameter. This will pass the reference to the original object rather than passing a copy. In the following example the `silly_double` function will mutate copies of its argument, accomplishing nothing.
+
+```c++
+void silly_double(int a) {
+    a *= 2;
+}
+```
+
+The `destructive_double` function will update the first argument to a number twice as large.
+
+```c++
+void destructive_double(int& a) {
+    a *= 2;
+}
+```
+
+## Arrays (introduction to...)
 
 ## Classes
 
@@ -221,4 +280,42 @@ int index_of(std::string a, char b) {
 
 ### Class inheritance
 
+## What are arrays really?
 
+Let's consider this innocent looking class specification. It has a private character array, a constructor that accepts a character array as a parameter, and it has a public method that returns the length of this array.
+
+```c++
+class MyExampleClass {
+    char content[];
+public:
+    MyExampleClass(char in[]);
+    int content_length();
+};
+```
+
+In programming languages like JavaScript, Python, or Java it would be trivial to implement this constructor and method.
+
+## Functions (using complex data structures and modifiers)
+
+### Pointers and arrays in functions
+
+A function's arguments must have consistent memory footprints so it is not possible to pass things like arrays with variable length as arguments to a function. 
+
+### Pointers to functions
+
+Suppose you want to implement a function decorator. Such a decorator needs to accept a pointer to another function as one of its arguments. A function pointer is declared like a normal function, but with `(*function_name)` instead of `function_name`.
+
+The following example shows an implementation of a decorator that writes execution time to an output stream just before returning the result of the function execution.
+
+```c++
+#include <iostream>
+#include <chrono>
+
+unsigned long exec_with_time(unsigned long (*base)(unsigned short), std::ostream& out, unsigned short arg) {
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    unsigned long result = (*base)(arg);
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    out << chrono::duration<long, std::nano>(end - start).count() << "ns";
+    return result;
+}
+```
