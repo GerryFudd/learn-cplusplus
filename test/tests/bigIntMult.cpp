@@ -1,21 +1,21 @@
 #include <math/BigInt.hpp>
 #include <Framework.hpp>
-#include <Assertions.hh>
 
-using namespace math;
+using namespace dexenjaeger::math;
+using namespace dexenjaeger::test;
 
 TEST(multiply_by_zero) {
   BigInt a((unsigned int[]){9728, 1921}, 2, false), z;
 
-  test::assert_equal<BigInt>(a * z, z);
-  test::assert_equal<BigInt>(z * a, z);
+  assert_equal<BigInt>(a * z, z);
+  assert_equal<BigInt>(z * a, z);
 }
 
 TEST(multiply_by_one) {
   BigInt a((unsigned int[]){9728, 1921}, 2, false), e{(unsigned int)1};
 
-  test::assert_equal<BigInt>(a * e, a);
-  test::assert_equal<BigInt>(e * a, a);
+  assert_equal<BigInt>(a * e, a);
+  assert_equal<BigInt>(e * a, a);
 }
 
 TEST(multiply_by_int) {
@@ -24,15 +24,15 @@ TEST(multiply_by_int) {
     c((unsigned int[]){0x1, 0xffffffff, 0xfffffffe}, 3, false);
   BigInt ab = a * b;
   BigInt ba = b * a;
-  test::assert_equal<BigInt>(ab, c);;
-  test::assert_equal<BigInt>(ba, c);;
+  assert_equal<BigInt>(ab, c);;
+  assert_equal<BigInt>(ba, c);;
 }
 
 TEST(multiply_with_multiple_blocks_and_overflow) {
   BigInt a((unsigned int[]){0xa3010210, 0x1129, 0xa3}, 3, false),
     b((unsigned int[]){0x31872f01, 0x1b21, 0x20e0, 0x720e170}, 4, true);
   BigInt product = a * b;
-  test::assert_equal<BigInt>(product, BigInt(
+  assert_equal<BigInt>(product, BigInt(
     (unsigned int[]){0xf8d1f210, 0x26a7d113, 0x4c085984, 0xe78675f1, 0x57db7049, 0x89ef8aca, 0x4}, 7, true
   ));
 }
@@ -55,7 +55,7 @@ TEST(multiply_large_normal) {
     }, 22, false
   );
   BigInt result = a * b;
-  test::assert_equal<BigInt>(result, c);;
+  assert_equal<BigInt>(result, c);;
 }
 
 
@@ -187,7 +187,7 @@ TEST(compound_prod_and_diff) {
     103, false
   );
   BigInt result = (tu + tl) * (ou + ol) - uu - ll;
-  test::assert_equal<BigInt>(result, mid);;
+  assert_equal<BigInt>(result, mid);;
 }
 
 TEST(multiply_karatsuba) {
@@ -281,5 +281,5 @@ TEST(multiply_karatsuba) {
     }, 295, false
   );
   BigInt result = a * b;
-  test::assert_equal<BigInt>(result, c);;
+  assert_equal<BigInt>(result, c);;
 }

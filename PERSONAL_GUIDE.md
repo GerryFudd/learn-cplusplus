@@ -358,3 +358,15 @@ unsigned long exec_with_time(unsigned long (*base)(unsigned short), std::ostream
     return result;
 }
 ```
+
+## Preprocessors
+
+### What's the deal with include and define?
+
+### Macros
+
+#### How to cheat with conSTRUCTors
+
+This is a tale of my brief descent into madness. This story begins innocently enough. It bothered me that my tests would take so long to compile and debug and I noticed that would only be an issue when I was using boost for running my tests. I wasn't using anything fancy from the boost testing library and it is huge. What's more, every build ran into the same compiler warnings regarding the deprecated logging library they use and I wasn't a fan of the way the tests report exceptions. Generally it has some quirks that I'm not such a big fan of. I eventually said to myself, I'll *just* replicate the functionality that I want and start building out a library that works the way my opinionated ass wants it to work.
+
+I started looking at the source code, and then at the c++ documentation, and back at the source code, and then tried to do some things myself... This is where I realized that something was weird. Where is the code that actually registers the tests?

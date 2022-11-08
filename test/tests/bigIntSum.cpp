@@ -1,77 +1,76 @@
 #include <Framework.hpp>
-#include <Test.hpp>
-#include <Assertions.hh>
 #include <math/BigInt.hpp>
 
-using namespace math;
+using namespace dexenjaeger::math;
+using namespace dexenjaeger::test;
 
 TEST(simple_sum)
 {
   BigInt a((unsigned int []){56}, 1, false), b((unsigned int []){109}, 1, false);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){165}, 1, false));
+  assert_equal<BigInt>(result, BigInt((unsigned int []){165}, 1, false));
 }
 
 TEST(negative_number_sum)
 {
   BigInt a((unsigned int []){56}, 1, true), b((unsigned int []){109}, 1, true);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){165}, 1, true));
+  assert_equal<BigInt>(result, BigInt((unsigned int []){165}, 1, true));
 }
 
 TEST(sum_with_overflow)
 {
   BigInt a((unsigned int []){0x80000000}, 1, false), b((unsigned int []){0x80000000}, 1, false);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){0, 1}, 2, false));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){0, 1}, 2, false));;
 }
 
 TEST(sum_with_multiple_blocks_and_overflow)
 {
   BigInt a((unsigned int []){0x80700230, 0xa0475d1e}, 2, false), b((unsigned int []){0xc00e00f2, 0x5fffffff}, 2, false);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x1}, 3, false));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x1}, 3, false));;
 }
 
 TEST(sum_with_several_orders_of_magnitude)
 {
   BigInt a((unsigned int []){0x80700230, 0xa0475d1e, 0x43875002, 0x213}, 4, false), b((unsigned int []){0xc00e00f2, 0x5fffffff}, 2, false);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x43875003, 0x213}, 4, false));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){0x407e0322, 0x475d1e, 0x43875003, 0x213}, 4, false));;
 }
 
 TEST(sum_with_opposite_signs)
 {
   BigInt a((unsigned int []){14}, 1, true), b((unsigned int []){11}, 1, false);
   BigInt result = a + b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){3}, 1, true));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){3}, 1, true));;
 }
 
 TEST(subtract_with_opposite_signs)
 {
   BigInt a((unsigned int []){38}, 1, true), b((unsigned int []){22}, 1, false);
   BigInt result = a - b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){60}, 1, true));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){60}, 1, true));;
 }
 
 TEST(subtract_with_multiple_blocks)
 {
   BigInt a((unsigned int []){0x2473, 0x7429, 0x0, 0x2}, 4, false), b((unsigned int []){0x824, 0xffffffff}, 2, false);
   BigInt result = a - b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){0x1c4f, 0x742a, 0xffffffff, 0x1}, 4, false));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){0x1c4f, 0x742a, 0xffffffff, 0x1}, 4, false));;
 }
 
 TEST(subtract_with_several_orders_of_magnitude_difference)
 {
   BigInt a((unsigned int []){0x2473, 0x7429, 0x0, 0x2}, 4, false), b((unsigned int []){0x824, 0x3a10}, 2, false);
   BigInt result = a - b;
-  test::assert_equal<BigInt>(result, BigInt((unsigned int []){0x1c4f, 0x3a19, 0x0, 0x2}, 4, false));;
+  assert_equal<BigInt>(result, BigInt((unsigned int []){0x1c4f, 0x3a19, 0x0, 0x2}, 4, false));;
 }
 
 TEST(negate_big_int) {
   BigInt a((unsigned int[]){9728, 1921}, 2, true), b((unsigned int[]){38921}, 1, false);
-  test::assert_equal<BigInt>(-a, BigInt((unsigned int[]){9728, 1921}, 2, false));
-  test::assert_equal<BigInt>(-b, BigInt((unsigned int[]){38921}, 1, true));
+  assert_equal<BigInt>(-a, BigInt((unsigned int[]){9728, 1921}, 2, false));
+  assert_equal<BigInt>(-b, BigInt((unsigned int[]){38921}, 1, true));
 }
 
 TEST(large_diff) {
@@ -154,7 +153,7 @@ TEST(large_diff) {
     },
     103, false
   );
-  test::assert_equal<BigInt>(first_diff, first_expected);;
+  assert_equal<BigInt>(first_diff, first_expected);;
 
   // expected = 100ffffcff00002
   BigInt second_expected = BigInt(
@@ -177,7 +176,7 @@ TEST(large_diff) {
     103, false
   );
   BigInt second_diff = first_expected - ll;
-  test::assert_equal<BigInt>(second_diff, second_expected);;
+  assert_equal<BigInt>(second_diff, second_expected);;
 }
 
 TEST(very_large_sums) {
@@ -201,7 +200,7 @@ TEST(very_large_sums) {
     0xffffffff,
   }, 51, false);
   BigInt first_sum = a + b;
-  test::assert_equal<BigInt>(first_sum, BigInt(
+  assert_equal<BigInt>(first_sum, BigInt(
     (unsigned int []){
       0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
       0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
@@ -232,7 +231,7 @@ TEST(very_large_sums) {
     0xffffffff,
   }, 51, false);
   BigInt second_sum = c + d;
-  test::assert_equal<BigInt>(second_sum, BigInt(
+  assert_equal<BigInt>(second_sum, BigInt(
     (unsigned int []){
       0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
       0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
@@ -279,7 +278,7 @@ TEST(very_large_sums) {
     0xffffffff, 0xffffffff,
   }, 102, false);
   BigInt last_sum = f + g;
-  test::assert_equal<BigInt>(last_sum, BigInt(
+  assert_equal<BigInt>(last_sum, BigInt(
     (unsigned int []){
       0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
       0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,

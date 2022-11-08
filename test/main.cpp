@@ -1,5 +1,7 @@
 #include <Framework.hpp>
 
+using namespace dexenjaeger::test;
+
 int main() {
-    return test::Aggregator::run_all();
+    return Aggregator::run_all();
 }
