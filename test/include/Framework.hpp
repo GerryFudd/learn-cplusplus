@@ -1,7 +1,7 @@
 #ifndef FRAMEWORK_DEFS
 #define FRAMEWORK_DEFS
 #include <Aggregator.hpp>
-#include <Assertions.hh>
+#include <Assertions.inl>
 
 namespace dexenjaeger {
     namespace test {

@@ -1,50 +1,30 @@
 #include <Aggregator.hpp>
+#include <sstream>
 
 using namespace std;
 
 namespace dexenjaeger {
     namespace test {
-        Aggregator * Aggregator::singleton = nullptr;
-        Aggregator::Aggregator(): count(0) {}
+        Aggregator * Aggregator::singleton = new Aggregator();
+        Aggregator::Aggregator() {
+            tests = new array_utils::appendable<Test>;
+        }
         Aggregator::~Aggregator() {
-            if (count > 0) {
-                delete[] tests;
-            }
-        }
-
-        Aggregator * Aggregator::get() {
-            if (Aggregator::singleton == nullptr) {
-                Aggregator::singleton = new Aggregator();
-            }
-            return Aggregator::singleton;
-        }
-
-        void Aggregator::add_(Test test) {
-            Test * updated_tests = new Test[count + 1];
-            for (int i = 0; i < count; i++) {
-                updated_tests[i] = tests[i];
-            }
-            updated_tests[count] = test;
-
-            if (count > 0) {
-                delete[] tests;
-            }
-            tests = updated_tests;
-            count++;
+            delete tests;
         }
 
         void Aggregator::add(Test test) {
-            (*Aggregator::get()).add_(test);
+            (*(*Aggregator::singleton).tests).append(test);
         }
 
         int Aggregator::run_all() {
-            Aggregator the = *Aggregator::get();
-            cout << "Running " << the.count << " tests." << endl;
+            array_utils::appendable<Test> the = *(*Aggregator::singleton).tests;
+            cout << "Running " << the.length() << " tests." << endl;
             int result = 0;
             string failures;
             stringstream info_buffer, failure_buffer;
-            for (unsigned short i = 0; i < the.count; i++) {
-                if (the.tests[i].run(i + 1, info_buffer, failure_buffer)) {
+            for (unsigned short i = 0; i < the.length(); i++) {
+                if (the.get(i).run(i + 1, info_buffer, failure_buffer)) {
                     result++;
                     failures.append("\n")
                         .append(info_buffer.str())

@@ -2,15 +2,13 @@
 #define AGGREGATOR_TYPE
 
 #include <Test.hpp>
+#include <array_utils/appendable.inl>
 
 namespace dexenjaeger {
     namespace test {
         class Aggregator {
             static Aggregator* singleton;
-            unsigned short count;
-            Test * tests;
-            static Aggregator * get();
-            void add_(Test);
+            array_utils::appendable<Test> * tests;
         public:
             Aggregator();
             ~Aggregator();

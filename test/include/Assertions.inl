@@ -2,6 +2,8 @@
 #define ASSERTIONS_LIB
 #include <Test.hpp>
 
+using namespace std;
+
 namespace dexenjaeger {
     namespace test {
         template <class commonType>
@@ -11,10 +13,10 @@ namespace dexenjaeger {
                 try {
                     capture_message << a << " should equal " << b;
                 } catch(...) {
-                    throw AssertionFailure(array_utils::mem_text("Values are not equal. Exception encountered while streaming values to this error message. Consider implementing friend ostream& operator<<(ostream&,const T&)"));
+                    throw AssertionFailure(string("Values are not equal. Exception encountered while streaming values to this error message. Consider implementing friend ostream& operator<<(ostream&,const T&)"));
                 }
 
-                throw AssertionFailure(array_utils::mem_text(capture_message));
+                throw AssertionFailure(capture_message.str());
             }
         }
     }

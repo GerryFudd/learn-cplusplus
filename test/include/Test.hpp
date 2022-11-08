@@ -1,20 +1,17 @@
 #ifndef TEST_TYPE
 #define TEST_TYPE
 
-#include <iostream>
-#include <exception>
+#include <exception_utils/enriched_exception.hpp>
 #include <array_utils/stringish.hpp>
 
 using namespace std;
 
 namespace dexenjaeger {
     namespace test {
-        class AssertionFailure: public exception {
-            const char * message;
+        class AssertionFailure: public exception_utils::enriched_exception {
         public:
-            AssertionFailure(array_utils::mem_text);
-            virtual const char * what();
-            friend ostream& operator<<(ostream&,const AssertionFailure&);
+            AssertionFailure(const char *);
+            AssertionFailure(string);
         };
 
         class Test {
