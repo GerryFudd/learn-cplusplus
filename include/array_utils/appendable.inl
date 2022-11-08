@@ -13,18 +13,29 @@ namespace dexenjaeger {
             NullArrayException(string message);
         };
 
+        /*
+            This class holds a dynamically sized array of the parameterized type. It will persist a new
+            array in memory if more items are appended than the current array can hold. Each of these
+            arrays are cleaned up when either a new items array is created or the class instance is
+            destructed.
+        */
         template <class itemType>
         class appendable {
             itemType * items;
             unsigned short count;
+            unsigned short array_size;
         public:
-            appendable(): items{nullptr}, count{0} {};
+            /*
+                This constructor allocates some amount of memory to the array so appending won't incur
+                the overhead of creating and deleting dynamic memory for the initial appends.
+            */
+            appendable(unsigned short size): items{new itemType[size]}, count{0}, array_size{size} {};
+            appendable(): appendable{0} {};
             ~appendable() {
-                if (count > 0) {
-                    delete[] items;
-                }
+                delete[] items;
             };
             unsigned short length();
+            unsigned short size();
             void append(itemType);
             itemType get(int);
         };
@@ -33,19 +44,24 @@ namespace dexenjaeger {
         unsigned short appendable<itemType>::length() {
             return count;
         }
+        template <class itemType>
+        unsigned short appendable<itemType>::size() {
+            return array_size;
+        }
 
         template <class itemType>
         void appendable<itemType>::append(itemType item) {
-            itemType * updated_items = new itemType[count + 1];
-            for (int i = 0; i < count; i++) {
-                updated_items[i] = items[i];
-            }
-            updated_items[count] = item;
+            if (count >= array_size) {
+                array_size = count + 1;
+                itemType * updated_items = new itemType[array_size];
+                for (int i = 0; i < count; i++) {
+                    updated_items[i] = items[i];
+                }
 
-            if (count > 0) {
                 delete[] items;
+                items = updated_items;
             }
-            items = updated_items;
+            items[count] = item;
             count++;
         }
 
