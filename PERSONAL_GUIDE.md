@@ -105,7 +105,7 @@ This creates two directories, `/usr/local/boost/include/` and `/usr/local/boost/
 
 Every variable is assigned a connected block of memory at the time it is declared. For this reason you must declare the type of the variable as it is created. You must even declare the size of compound data types.
 
-All data types in c++ have constructors. So even integers and booleans may be initialized with statements like `int a {-3};` or `bool b {false};`. It is also possible to set a variable equal to an instance of its type `int a = -3;` or `bool b = false;`. When a type has a default constructor that is implicitly called when an instance of that type is declared without an explicit value assigned or constructor call such as `int c;`.
+All data types in c++ have constructors. So even integers and booleans may be initialized with statements like `int a {-3};` or `bool b {false};`. It is also possible to set a variable equal to an instance of its type `int a = -3;` or `bool b = false;`. When a type has a default constructor and an instance of the class is declared without a constructor call, such as `int c;`, that default constructor is implicitly called.
 
 It is also possible to declare several variables of the same type separated by commas.
 
@@ -118,6 +118,10 @@ In this example `a, b, c,` and `d` are `int` type objects, `a == -3`, `b == 14`,
 ## Data structures
 
 ### Native
+
+The native data types are available as part of the language's ecosystem. I've broken these into several smaller categories.
+
+#### Primitive CS stuff
 
 `bool` is either `true` or `false` and only takes up one byte. The `byte` data type takes on the values from `-128` to `127`, but doesn't support mathematical operations.
 
@@ -141,79 +145,9 @@ In this example `a, b, c,` and `d` are `int` type objects, `a == -3`, `b == 14`,
 
 `char` represents a single letter or other text symbol. This takes up one byte in memory. `wchar_t` is a character that uses two bytes and represents a symbol from a character set that doesn't fit in a single byte.
 
-### Standard libraries
-
-#### iostream
-
-The iostream library is used for logging with the `std::cout` command and the `<<` operator.
-
-```c++
-int a {-3}, b = 47;
-
-std::cout << a << " > " << b << " is a " 
-  << (a > b) << " statement.";
-// -3 > 47 is a false statement.
-```
-
-Any class that overrides the `operator<<` method can be streamed with `<<`. The signature of this override looks like this.
-
-```c++
-class T {
-public:
-  friend ostream& operator<<(ostream&, const T&);
-}
-```
-
-#### string
-
-The `string` data type is part of the `<string>` library. This library also has the useful `std::to_string` method that converts other types to strings. Strings may also be added with the `+` operator.
-
-The string type also has useful helper methods `std::string::c_str`, which converts the string to the type used in exception messages, and `std::string::length`, which returns the number of characters in the string.
-
-#### exception
-
-The `<exception>` class has a virtual method `std::exception::what` that returns the exception message. You may provide concrete exception classes extend this and use them in `try { } catch( ) { }` blocks. You can use any type in your catch blocks, but it is best to use classes that extend `exception`. If the classes `FooException` and `BarException` both extend `exception`, then the following block will log a `FooException` message in the first block and will log a generic message when a `BarException` is caught in the second block.
-
-```c++
-try {
-    //... do stuff
-} catch(FooException fooEx) {
-    std::cout << fooEx.what() << std::endl;
-} catch(exception e) {
-    std::cout << "An unexpected exception was encountered" << std::endl;
-}
-```
-
-When a `catch` block contains an ellipsis, it will catch anything.
-
-```c++
-try {
-    // ... do stuff
-} catch (...) {
-    std::cout << "Something was thrown." << std::endl;
-}
-```
-
-#### chrono
-
-This is the datetime library. It has several clock interfaces and the time_point and duration classes to manage timing data. The `time_clock` is intended for accurately capturing the current time if you simply want to know when something happened. The `steady_clock` is recommended if you're capturing a time duration but don't care as much about the absolute time.
-
-Each clock has a `time_point now()` method that returns the instant when the method was invoked. When two `time_points` are subtracted, the result is a `duration`, which has a parameter that specifies the units for that duration. There is a constructor of the form `duration<T, U>duration(duration)` where `T` is the data type that it uses to report the time and `U` is a supported unit of time: hours, minutes, seconds, milli, micro, or nano. For example this is how to capture a duration in nanoseconds.
-
-```c++
-
-using namespace std::chrono;
-...
-steady_clock::time_point a = steady_clock::now();
-// do stuff
-steady_clock::time_point b = steady_clock::now();
-duration<long, std::nano> d{b - a};
-// d.count() returns the nanoseconds between a and b.
-```
-
 ## Pointers (introduction to...)
 
-A pointer is a one byte number that points to an address in memory. Pointers are declared as a reference to a specific data type so the variable they point to must be the declared type. An `*` in front of a pointer returns the variable that is stored int the address the pointer points to. A pointer is declared as `${type} * ${name}`. An `&` in front of a variable returns the variable's address in memory. If the variable takes up multiple bytes, this returns the address of the first byte.
+A pointer is a one byte number that points to an address in memory. Pointers are declared as a reference to a specific data type so the variable they point to must be the declared type. An `*` in front of a pointer returns the variable that is stored in the address the pointer points to. A pointer is declared as `${type} * ${name}`. An `&` in front of a variable returns the variable's address in memory. If the variable takes up multiple bytes, this returns the address of the first byte.
 
 ```c++
 int a = -43;
@@ -224,7 +158,9 @@ int * d = &c;
 
 In this example the `*b == -43`, `*d == -43`, and `*b == *d`, but `b != d`. Likewise `a == -43`, `c == -43`, and `a == c`, but `&a != &c`. The values of `&a`, `b`, `&c`, and `d` are all addresses in memory that appear as integer-like values that represent the byte's physical order in all of the program's available memory.
 
-Since each pointer is associated with a data type and all of these types have a specific number or bytes assigned to their values, there is a handy way to point to the value of the next instance of that type in memory. For example if the characters `char w = 'F'; char x = 'o'; char y = 'o'; char z = 'd';` are stored in adjacent bytes and `char * word = &w`, then `*word == 'F'`, `*(word + 1) == 'o'`, `*(word + 2) == 'o'`, and `*(word + 3) == 'd'`. 
+Since each pointer is associated with a data type and all of these types have a specific number or bytes assigned to their values, there is a handy way to point to the value of the next instance of that type in memory. For example suppose the characters `char w = 'F'; char x = 'o'; char y = 'o'; char z = 'd';` are stored in adjacent bytes and suppose that `char * word = &w`. Then `*word == 'F'`, `*(word + 1) == 'o'`, `*(word + 2) == 'o'`, and `*(word + 3) == 'd'`.
+
+When a type is assigned multiple bytes, these bytes are always contiguous. For example suppose that `int a{0x3f2e};` and `int b{0xc019};` are stored in adjacent blocks of memory. The variable `a` takes up four bytes and `b` takes up the subsequent four bytes. The pointer `int * c = &a;` knows that it a pointer to objects of type `int`, so `c + 1` points to the address four bytes after `c`. Therefore `*(c + 1) == b == 0xc019`.
 
 ## Functions (introduction to...)
 
@@ -271,15 +207,16 @@ When a parameter is specified by its type and no modifiers the function referenc
 
 For primitive types such as `int` or `char` the cost of copying the variable is negligible and in most cases it is a feature rather than a bug to avoid mutating the arguments that are passed to your functions.
 
-If the process of copying one of your arguments is unacceptably time consuming or if your function *intends* to mutate one of its arguments, then append the `&` character to the type of that parameter. This will pass the reference to the original object rather than passing a copy. In the following example the `silly_double` function will mutate copies of its argument, accomplishing nothing.
+If the process of copying one of your arguments is unacceptably time consuming or if your function *intends* to mutate one of its arguments, then append the `&` character to the type of that parameter. This will pass the reference to the original object rather than passing a copy. In the following example the `pure_double` function looks like it mutates the argument before returning it. However it only doubles a *copy* of that argument and returns that, making it a pure function.
 
 ```c++
-void silly_double(int a) {
+int pure_double(int a) {
     a *= 2;
+    return a;
 }
 ```
 
-The `destructive_double` function will update the first argument to a number twice as large.
+The `destructive_double` function will *update* the first argument to a number twice as large.
 
 ```c++
 void destructive_double(int& a) {
@@ -351,26 +288,136 @@ struct rectangle {
 }
 ```
 
-There are more ways to define such a constructor.
+You may also initialize each parameter by reference as part of a constructor.
 
 ```c++
 struct rectangle {
     unsigned int width;
     unsigned int height;
-    rectangle(unsigned int width, unsigned int height) width{width}, height{height} {}
+    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
 };
 ```
 
-```c++
+The parameters of a data structure are public by default, so it is possible to reference them directly.
 
+```c++
 struct rectangle {
     unsigned int width;
     unsigned int height;
-    rectangle(unsigned int width, unsigned int height) width{width}, height{height} {}
+    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
 };
+
+unsigned long rectangle_area(rectangle r) {
+    return r.height * r.width;
+}
+
 ```
+
+A struct may also have an attribute that is a function.
+
+```c++
+struct rectangle {
+    unsigned int width;
+    unsigned int height;
+    unsigned long area();
+    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
+};
+
+unsigned long rectangle::area() {
+    return height * width;
+}
+
+```
+
+A struct does not typically have member funtions, but usually they only hold collections of parameter values.
 
 ## Classes
+
+### Access modifiers and "friend"
+
+Classes are practically the same as structs but their members are private by default and they are typically used for data structures that are more than simple collections of parameters. Each parameter and method on a class may be `private`, `protected`, or `public`. The following example contains each of these access modifiers.
+
+```c++
+class Vehicle {
+    unsigned int vin;
+    int x;
+    int y;
+protected:
+    bool move(int a, int b) {
+        x += a;
+        y += b;
+    }
+public:
+    Vehicle(int x, int y, unsigned int vin): x{x}, y{y}, vin{vin} {}
+    int distance() {
+        return abs(y) + abs(x);
+    }
+};
+```
+
+Private attributes may be accessed only by instances of the class and by functions declared with the `friend` keyword.
+
+### Operator overrides
+
+The `friend` keyword is used in a lot of "operator override" methods. For example, it's possible to define the `==` relationship between two `Vehicle`s with the following.
+
+```c++
+class Vehicle {
+    ...
+public:
+    ...
+    friend bool operator==(const Vehicle& v1, const Vehicle& v2) {
+        return v1.vin == v2.vin;
+    }
+};
+```
+
+Now the `==` operator will only check that the `vin` on two `Vehicle`s are the same.
+
+```c++
+#include <iostream>
+
+int main() {
+    Vehicle v1(37, 18, 123456), v2(-84, 22, 654321), v3(-84, 22, 123456);
+
+    std::cout << "v1 == v2 is " << (v1 == v2) << std::endl;
+    std::cout << "v1 == v3 is " << (v1 == v3) << std::endl;
+    std::cout << "v2 == v3 is " << (v2 == v3) << std::endl;
+    return 0;
+}
+```
+
+This code will produce the following.
+
+```sh
+% /usr/bin/clang++ -std=c++20 ./main.cpp -o ./build/main
+% ./build/main
+v1 == v2 is 0
+v1 == v3 is 1
+v2 == v3 is 0
+```
+
+There are many other operators that may be overridden. The `BigInt` class [that is implemented as an exercise in this repo](./include/math/BigInt.hpp) provides several examples of these.
+
+```c++
+BigInt operator + (const BigInt&);
+BigInt operator - (const BigInt&);
+BigInt operator - ();
+BigInt operator * (const BigInt&);
+friend bool operator== (const BigInt&, const BigInt&);
+friend ostream& operator<<(ostream&, const BigInt&);
+```
+
+Here is the complete list of overloadable operators in the c++ standard.
+
+```
+new delete
+new[] ~!+-*/%^& | = += -= *= /= %= ^= &= |= == != < > <= >= <=> && || << >> <<= >>= ++ -- ,
+```
+
+The operators `+ - * &` may also be overloaded as either unary or binary operators.
+
+Operators such as `==` may be implemented as class methods, but take care that you should be consistent that such an operator should be a const method.
 
 ### Virtual is the new abstract
 
@@ -405,6 +452,76 @@ error: array type 'char[]' is not assignable
 ```
 
 That's curious.
+
+### Standard libraries
+
+#### iostream
+
+The iostream library is used for logging with the `std::cout` command and the `<<` operator.
+
+```c++
+int a {-3}, b = 47;
+
+std::cout << a << " > " << b << " is a " 
+  << (a > b) << " statement.";
+// -3 > 47 is a false statement.
+```
+
+Any class that overrides the `operator<<` method can be streamed with `<<`. The signature of this override looks like this.
+
+```c++
+class T {
+public:
+  friend ostream& operator<<(ostream&, const T&);
+}
+```
+
+#### string
+
+The `string` data type is part of the `<string>` library. This library also has the useful `std::to_string` method that converts other types to strings. Strings may also be added with the `+` operator.
+
+The string type also has useful helper methods `std::string::c_str`, which converts the string to the type used in exception messages, and `std::string::length`, which returns the number of characters in the string.
+
+#### exception
+
+The `<exception>` class has a virtual method `std::exception::what` that returns the exception message. You may provide concrete exception classes extend this and use them in `try { } catch( ) { }` blocks. You can use any type in your catch blocks, but it is best to use classes that extend `exception`. If the classes `FooException` and `BarException` both extend `exception`, then the following block will log a `FooException` message in the first block and will log a generic message when a `BarException` is caught in the second block.
+
+```c++
+try {
+    //... do stuff
+} catch(FooException fooEx) {
+    std::cout << fooEx.what() << std::endl;
+} catch(exception e) {
+    std::cout << "An unexpected exception was encountered" << std::endl;
+}
+```
+
+When a `catch` block contains an ellipsis, it will catch anything.
+
+```c++
+try {
+    // ... do stuff
+} catch (...) {
+    std::cout << "Something was thrown." << std::endl;
+}
+```
+
+#### chrono
+
+This is the datetime library. It has several clock interfaces and the time_point and duration classes to manage timing data. The `time_clock` is intended for accurately capturing the current time if you simply want to know when something happened. The `steady_clock` is recommended if you're capturing a time duration but don't care as much about the absolute time.
+
+Each clock has a `time_point now()` method that returns the instant when the method was invoked. When two `time_points` are subtracted, the result is a `duration`, which has a parameter that specifies the units for that duration. There is a constructor of the form `duration<T, U>duration(duration)` where `T` is the data type that it uses to report the time and `U` is a supported unit of time: hours, minutes, seconds, milli, micro, or nano. For example this is how to capture a duration in nanoseconds.
+
+```c++
+
+using namespace std::chrono;
+...
+steady_clock::time_point a = steady_clock::now();
+// do stuff
+steady_clock::time_point b = steady_clock::now();
+duration<long, std::nano> d{b - a};
+// d.count() returns the nanoseconds between a and b.
+```
 
 ## Functions (using complex data structures and modifiers)
 
