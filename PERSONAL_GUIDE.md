@@ -6,9 +6,9 @@ Notes for my future self.
 
 ### How do you compile and run?
 
-The command line tool for c++ is called `clang++` and on macos the command `c++` seems to be an alias. Source files in c++ end with `.cpp`. Here's how you write, compile, and execute such a file.
+The command line tool for c++ is called `clang++` and on macos the command `c++` is an alias. Source files in c++ end with `.cpp`. Here's how you write, compile, and execute such a file.
 
-The entry point of a c++ project is a method called `main`, which returns an int and accepts no arguments. The program terminates in a success state if `main` returns 0 and in an error state otherwise.
+The entry point of a c++ project is a method called `main`, which returns an int and accepts two arguments. The first argument is an integer `argc`, which is the argument count. The second argument is an array of character pointers `argv`, which is the arguments vector. Functions in general may be declared as `<return type> <function name>()` regardless of their arguments. This is the typically how the `main` method is written when a program is intended to be run with out command line arguments. The program terminates in a success state if `main` returns 0 and in an error state otherwise.
 
 The `std::cout` command, which is in the `iostream` library, prints to the console so that is part of the prototypical "Hello, world!" program. The `std::endl` command from the same library returns the environment-specific newline character, so we will use that as well.
 
@@ -24,7 +24,7 @@ int main() {
 
 ```
 
-To compile such a file and output the result to an executable run `%c++ <source file name>.cpp -o <output file name>`. Then you can execute the code with `%./<output file name>`. The flag `-std=#` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
+To compile such a file and output the result to an executable run `%c++ <source file name>.cpp -o <output file name>`. Then you can execute the code with `%./<output file name>`. The flag `-std` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
 
 Now run `%c++ -std=c++20 main.cpp  -o ./hello` and notice that there is a new file called `hello` in your working directory. Execute this file.
 
