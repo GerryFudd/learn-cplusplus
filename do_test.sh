@@ -3,7 +3,7 @@
 test_lib_include='./test/include';
 project_include='./include';
 
-cpp_version=c++20;
+cpp_version=c++17;
 
 rm ./build/tests;
 
