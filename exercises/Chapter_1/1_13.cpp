@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define MAXLEN 10
+#define MAXLEN 20
 
 int main() {
   int c, current_length = 0, longest_word = 0, highest_count = 0;
@@ -11,7 +11,13 @@ int main() {
   }
 
   while ((c = getchar()) != EOF) {
-    if (isblank(c) || c == '\n') {
+    if (isalpha(c) || isdigit(c)) {
+      if (current_length == MAXLEN) {
+        printf("Current word exceeds maximum word length %d.\n", MAXLEN);
+        return 1;
+      }
+      current_length++;
+    } else if (c != '\'' && c != '-') {
       if (current_length > 0) {
         if (current_length > longest_word) {
           longest_word = current_length;
@@ -22,11 +28,6 @@ int main() {
         }
       }
       current_length = 0;
-    } else if (current_length == MAXLEN) {
-      printf("Current word exceeds maximum word length %d.\n", MAXLEN);
-      return 1;
-    } else {
-      current_length++;
     }
   }
   if (current_length > 0) {
@@ -40,15 +41,15 @@ int main() {
   for (int h = highest_count; h > 0; h--) {
     for (int i = 0; i < longest_word; i++) {
       if (histogram[i] >= h) {
-        printf("#");
+        printf(" #");
       } else {
-        printf(" ");
+        printf("  ");
       }
     }
     printf("\n");
   }
   for (int i = 0; i < longest_word; i++) {
-    printf("%d", i+1);
+    printf("%2d", i+1);
   }
   printf("\n");
   return 0;
