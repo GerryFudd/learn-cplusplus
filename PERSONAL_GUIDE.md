@@ -6,7 +6,9 @@ Notes for my future self.
 
 ### How do you compile and run?
 
-The command line tool for c++ is called `clang++` and on macos the command `c++` is an alias. Source files in c++ end with `.cpp`. Here's how you write, compile, and execute such a file.
+On macos the command line tool for c++ is called `clang++` and the command `c++` is an alias. In general on a linux system `g++` is the tool to compile c++. You may also use `gcc` on a linux system if you include the flag `-lstdc++`.
+
+Source files in c++ end with `.cpp`. Here's how you write, compile, and execute such a file.
 
 The entry point of a c++ project is a method called `main`, which returns an int and accepts two arguments. The first argument is an integer `argc`, which is the argument count. The second argument is an array of character pointers `argv`, which is the arguments vector. Functions in general may be declared as `<return type> <function name>()` regardless of their arguments. This is the typically how the `main` method is written when a program is intended to be run with out command line arguments. The program terminates in a success state if `main` returns 0 and in an error state otherwise.
 
@@ -24,11 +26,21 @@ int main() {
 
 ```
 
-To compile such a file and output the result to an executable run `%c++ <source file name>.cpp -o <output file name>`. Then you can execute the code with `%./<output file name>`. The flag `-std` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
+To compile such a file and output the result to an executable run 
+```bash
+%g++ <source file name>.cpp -o <output file name>
+```
+to use the specific c++ compiler or
+```bash
+%gcc <source file name>.cpp -lstdc++ -o <output file name>
+```
+to use the more general purpose c compiler. *Importantly, anything that uses the -l... flag must come after the list of .cpp files.*
 
-Now run `%c++ -std=c++20 main.cpp  -o ./hello` and notice that there is a new file called `hello` in your working directory. Execute this file.
+This command will create an executable file at `%./<output file name>`. The flag `-std` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
 
-```zsh
+Now run `%g++ -std=c++20 main.cpp -o ./hello` and notice that there is a new file called `hello` in your working directory. Execute this file.
+
+```bash
 %./hello
 Hello, world!
 ```
@@ -79,7 +91,7 @@ int main() {
 Putting this all together, we will specify `./include` as an include path, `c++20` as the compiler version, `./src/hello.cpp` and `./main.cpp` as source files, and `./import_test` as the resulting executable.
 
 ```zsh
-% c++ -std=c++20 -I./include src/hello.cpp main.cpp -o ./import_test
+% g++ -std=c++20 -I./include src/hello.cpp main.cpp -o ./import_test
 % ./import_test 
 Hello, world!
 ```
@@ -451,7 +463,7 @@ error: array type 'char[]' is not assignable
     content = in;
 ```
 
-That's curious.
+That's curious. The trouble is that every type in c takes up a fixed amount of memory. The memory that is allocated to an array depends on the number of elements in said array. In this instance the parameter `int content[];` is actually a pointer `int *content;` and it points to the location in memory where the first element of `char in[]` is stored. The type `char in[]` isn't really a type, since it can have an arbitrary size itself. You can only assign a fixed length character array, such as `char in[256]`, which allocates 256 consecutive locations in memory for values of type `char`.
 
 ### Standard libraries
 
@@ -478,21 +490,28 @@ public:
 
 #### string
 
-The `string` data type is part of the `<string>` library. This library also has the useful `std::to_string` method that converts other types to strings. Strings may also be added with the `+` operator.
+The `std::string` data type is part of the `<string>` library. 
 
-The string type also has useful helper methods `std::string::c_str`, which converts the string to the type used in exception messages, and `std::string::length`, which returns the number of characters in the string.
+This library has the useful `std::to_string` method that converts other types to strings and strings may be added with the `+` operator. The string type has useful helper methods `std::string::c_str`, which converts the string to the type used in exception messages, and `std::string::length`, which returns the number of characters in the string.
+
+Most importantly the `std::string` type manages a variable amount of memory without the usual pitfalls that can occur when you do this yourself. If you don't clean up char arrays that are associated with your classes, then you will have memory leaks. When you copy a class instance, both instances of your class will have pointers to the same resource and if both instances attempt to de-allocate the referenced char arrays, then one of them will trhow an exception because the referenced array is already gone.
+
+#### vector
+
+The `std::vector<T>` data type is part of the `<vector>` library. It is a more robust way of managing a variable length collection of items. Like the `std::string` type it will avoid memory leaks and avoid issues with copying and deallocating memory.
+
+This data type has a `std::vector<T>::push_back(T)` method that appends a new element to the end and a `std::vector<T>::pop_back()` method that removes the last element. It has a `std::vector<T>::size()` method that returns the size of the vector. The elements of a `std::vector<T> v` can be accessed by index via `v[i]`;
 
 #### exception
 
-The `<exception>` class has a virtual method `std::exception::what` that returns the exception message. You may provide concrete exception classes extend this and use them in `try { } catch( ) { }` blocks. You can use any type in your catch blocks, but it is best to use classes that extend `exception`. If the classes `FooException` and `BarException` both extend `exception`, then the following block will log a `FooException` message in the first block and will log a generic message when a `BarException` is caught in the second block.
+The `<exception>` class has a virtual method `const char *std::exception::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW;` that returns the exception message. You may provide concrete exception classes that extend this and use them in `try { } catch( ) { }` blocks. You can use any type in your catch blocks, but it is best to use classes that extend `exception`. If the classes `FooException` and `BarException` both extend `exception`, then the following block will log a `FooException` message in the first block before handling it gracefully and when a `BarException` is thrown the process will terminate and log the result of calling `BarException::what()`.
 
 ```c++
 try {
     //... do stuff
 } catch(FooException fooEx) {
     std::cout << fooEx.what() << std::endl;
-} catch(exception e) {
-    std::cout << "An unexpected exception was encountered" << std::endl;
+    handle_foo();
 }
 ```
 
@@ -602,14 +621,16 @@ int main() {
 When you compile an run the code, you see the logs.
 
 ```sh
-% /usr/bin/clang++ -std=c++20 ./explore.cpp -o ./build/explore
+% /usr/bin/g++ -std=c++20 ./explore.cpp -o ./build/explore
 % ./build/explore
 About to run test.
 My test is running.
 Completed running test.
 ```
 
-How do you access the name `my_test` from inside of `main`? If you're generating that function name in a macro, it will be inaccessible from that context. I tried simply calling `runner.reg(&my_test)` where it is declared, but that doesn't compile.
+How do you run tests such as `my_test` from inside of `main` without adding a call to each test explicitly to `main`? I would like to use a macro so that a new test can be added in a test file and then it runs along with any other tests without updating `main.cpp`.
+
+If you're generating that function name in a macro, it will be inaccessible from that context. I tried simply calling `runner.reg(&my_test)` where it is declared, but that doesn't compile.
 
 ```c++
 #include <iostream>
@@ -634,7 +655,7 @@ int main() {
 When `./explore.cpp` contains this code, the compiler shows an error.
 
 ```sh
-% /usr/bin/clang++ -std=c++20 ./explore.cpp -o ./build/explore
+% /usr/bin/g++ -std=c++20 ./explore.cpp -o ./build/explore
 ./explore.cpp:23:5: error: unknown type name 'runner'; did you mean 'Runner'?
     runner.reg(&my_test);
     ^~~~~~
@@ -683,7 +704,7 @@ Now we see the problem the other way.
 1 error generated.
 ```
 
-You can't create a function inside of an execution context! What gives?! How do you get off the ground with this?!?! This is where a sane person would accept either that they could do something simpler. I could keep using Boost tests, they work after all. I could explicitly register each test separately from its declaration and just use the same name. It's not necessary to do it this way!
+You can't create a function inside of an execution context! What gives?! How do you get off the ground with this?! This is where a sane person would do something simpler. I could keep using Boost tests, they work after all. I could instead avoid Boost and explicitly add each test call to `main.cpp`. It's not necessary to do it this way!
 
 I did not accept defeat and now I know how to get around the execution context issue! After digging through the boost code I finally figured out what code is generated from this prototypical test case.
 
@@ -830,7 +851,7 @@ BOOST_TEST_APPEND_UNIQUE_ID( BOOST_JOIN( test_name, _registrar ) ) BOOST_ATTRIBU
 
 Well...ok? It declares an instance of another struct that has yet another unique name? What does *that* struct look like?
 
-It turns out that    is another empty struct, but it has a number of overloaded constructors that don't *construct* anything. Here's the version of the constructor that the generated code calls.
+It turns out that...is another empty struct, but it has a number of overloaded constructors that don't *construct* anything. Here's the version of the constructor that the generated code calls.
 
 
 ```
@@ -846,6 +867,7 @@ Now let's see how my implementation could work.
 
 ```c++
 #include <iostream>
+#include "Library.hpp"
 
 using namespace std;
 
@@ -879,6 +901,7 @@ Bam! It was that simple the whole time. Now let's just define `./include/Library
 #include <iostream>
 #include <exception>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -891,7 +914,6 @@ namespace test {
     };
     
     class Runner {
-        static void null_runnable();
         void (*runnable)();
     public:
         Runner(void (*runnable)());
@@ -899,13 +921,8 @@ namespace test {
         void run();
     };
     class TestModule {
-        Runner * runners;
-        int count;
-        static TestModule * singleton;
+        static vector<Runner> runners;
     public:
-        TestModule(int);
-        TestModule();
-        ~TestModule();
         static void run_all();
         static void reg(Runner);
     };
@@ -939,9 +956,8 @@ namespace test {
         return message.c_str();
     }
     
-    void Runner::null_runnable() {}
     Runner::Runner(void (*runnable)()): runnable{runnable} {};
-    Runner::Runner(): Runner::Runner(*Runner::null_runnable) {};
+    Runner::Runner(): Runner::Runner{nullptr} {}
     void Runner::run() {
         if (runnable != nullptr) {
             cout << "About to run test." << endl;
@@ -954,26 +970,13 @@ namespace test {
         }
     }
 
-    TestModule::TestModule(int capacity):runners{new Runner[capacity]}, count{0} {};
-    TestModule::TestModule(): TestModule{20} {};
-    TestModule * TestModule::singleton = new TestModule();
-    TestModule::~TestModule() {
-        delete[] runners;
-    };
     void TestModule::run_all() {
-        TestModule * the = TestModule::singleton;
-        for (int i = 0; i < (*the).count; i++) {
-            (*the).runners[i].run();
+        for (int i = 0; i < runners.size(); i++) {
+            runners[i].run();
         }
     }
     void TestModule::reg(Runner runnable) {
-        TestModule * the = TestModule::singleton;
-        if ((*the).count < 20) {
-            (*the).runners[(*the).count] = runnable;
-            (*the).count++;
-            return;
-        }
-        cerr << "Exceeded test capacity, new runnable ignored." << endl;
+        runners.push_back(runnable);
     }
 
     cheater_struct::cheater_struct(void (*runnable)()) {
