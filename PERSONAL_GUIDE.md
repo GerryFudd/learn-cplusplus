@@ -887,7 +887,7 @@ namespace test {
         string message;
     public:
         AssertionFailure(string message);
-        virtual const char * what();
+        virtual const char * what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override;
     };
     
     class Runner {
@@ -935,7 +935,7 @@ using namespace std;
 
 namespace test {
     AssertionFailure::AssertionFailure(string message): message{message} {};
-    const char * AssertionFailure::what() {
+    const char * AssertionFailure::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW {
         return message.c_str();
     }
     

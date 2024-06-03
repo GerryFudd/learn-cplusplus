@@ -44,7 +44,7 @@ namespace gerryfudd::exception_utils {
         stack_trace = out.str();
     }
 
-    const char * enriched_exception::what() {
+    const char * enriched_exception::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW {
         return message.c_str();
     }
 

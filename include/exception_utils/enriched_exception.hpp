@@ -17,7 +17,7 @@ namespace gerryfudd::exception_utils {
         string stack_trace;
     public:
         enriched_exception(string);
-        virtual const char * what();
+        virtual const char * what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override;
 
         friend ostream& operator<<(ostream&,const enriched_exception&);
     };
