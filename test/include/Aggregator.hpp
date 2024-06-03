@@ -2,19 +2,22 @@
 #define AGGREGATOR_TYPE
 
 #include <Test.hpp>
-#include <array_utils/appendable.inl>
+#include <exception>
+#include <vector>
 
-namespace dexenjaeger {
-    namespace test {
-        class Aggregator {
-            static Aggregator* singleton;
-            array_utils::appendable<Test> * tests;
-        public:
-            Aggregator();
-            ~Aggregator();
-            static void add(Test);
-            static int run_all();
-        };
-    }
+namespace gerryfudd::test {
+  class AggregationException: public std::exception {
+    std::string message;
+  public:
+    AggregationException(const char *);
+    const char* what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override;
+  };
+
+  class Aggregator {
+    static std::vector<Test> tests;
+  public:
+    static void add(Test);
+    static int run_all();
+  };
 }
 #endif

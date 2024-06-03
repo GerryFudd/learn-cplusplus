@@ -1,6 +1,6 @@
 #include <Framework.hpp>
 
-using namespace dexenjaeger::test;
+using namespace gerryfudd::test;
 
 int main() {
     return Aggregator::run_all();
