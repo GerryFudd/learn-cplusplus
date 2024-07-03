@@ -861,11 +861,11 @@ The example class demonstrates this specific issue with memory management, but t
 
 #### How to cheat with conSTRUCTors
 
-This is a tale of my brief descent into madness. This story begins innocently enough. It bothered me that my tests would take so long to compile and debug and I noticed that would only be an issue when I was using boost for running my tests. I wasn't using anything fancy from the boost testing library and it is huge. What's more, every build ran into the same compiler warnings regarding the deprecated logging library they use and I wasn't a fan of the way the tests report exceptions. Generally it has some quirks that I'm not such a big fan of. I eventually said to myself, I'll *just* replicate the functionality that I want and start building out a library that works the way my opinionated ass wants it to work.
+This is a tale of my journey to writing my own testing library. This story begins innocently enough. It bothered me that my tests would take so long to compile and debug. I noticed that my compile times would only get out of hand when I used the boost framework to run my tests. I wasn't using anything fancy from the boost testing library, but the library as a whole is huge. What's more, every build ran into the same compiler warnings regarding the deprecated logging library they use. I wasn't a fan of the way the tests report exceptions either. Generally the boost testing framework has some quirks that I'm not such a big fan of. I eventually said to myself, I'll *just* replicate the functionality that I want and start building out a library that works the way my opinionated ass wants it to work.
 
 Here is the challenge. How do you create a macro called `TEST` so that you can declare a test function and it is automatically registered with the test runner and executed as part of the test suite? This is obviously possible because it is done inside of the boost library, but how do they do it?
 
-I started looking at the source code, and then at the c++ documentation, and back at the source code, and then tried to do some things myself... This is where I realized that something was weird. Where is the code that actually registers the tests? The Boost framework implements a lot of clever code to ensure that each test gets a unique name in the compiled code and creates each test case as an instance of a struct, but none of the subsequent code has a reference to that struct instance! I read each page of the spec for Macros hoping to find any way to pass a name from one macro to another, but that functionality doesn't exist so far as I could find.
+I started looking at the source code, and then at the c++ documentation, and back at the source code, and then tried to do some things myself... This is where I realized that something was weird. Where is the code that actually registers the tests? The Boost framework implements a lot of clever code to ensure that each test gets a unique name in the compiled code and creates each test case as an instance of a struct, but none of the subsequent code has a reference to that struct instance! I read each page of the spec for Macros hoping to find any way to pass the test name from one macro to another, but that functionality doesn't exist so far as I could find.
 
 In desperation, I tried writing code that would just call the static register method on my test runner in the place where I create the test. No matter what I attempted I would run into one of two issues. Here is a sample program called `./example.cpp` that compiles and runs successfully.
 
@@ -904,17 +904,17 @@ int main() {
 }
 ```
 
-When you compile an run the code, you see the logs.
+When you compile an run the code, you see these logs.
 
 ```sh
-% /usr/bin/g++ -std=c++20 ./explore.cpp -o ./build/explore
+% g++ -std=c++20 ./explore.cpp -o ./build/explore
 % ./build/explore
 About to run test.
 My test is running.
 Completed running test.
 ```
 
-How do you run tests such as `my_test` from inside of `main` without adding a call to each test explicitly to `main`? I would like to use a macro so that a new test can be added in a test file and then it runs along with any other tests without updating `main.cpp`.
+Even though this works, it isn't remotely satisfactory. If I followed this patter, I'd have to go into `main` and add a call to every new test as I added them. Any test framework should allow you to run tests such as `my_test` from inside of `main` without adding a call to each test explicitly in `main`. I would like to use a macro so that a new test can be added in a test file and then it runs along with any other tests without updating `main.cpp`.
 
 If you're generating that function name in a macro, it will be inaccessible from that context. I tried simply calling `runner.reg(&my_test)` where it is declared, but that doesn't compile.
 
@@ -990,9 +990,9 @@ Now we see the problem the other way.
 1 error generated.
 ```
 
-You can't create a function inside of an execution context! What gives?! How do you get off the ground with this?! This is where a sane person would do something simpler. I could keep using Boost tests, they work after all. I could instead avoid Boost and explicitly add each test call to `main.cpp`. It's not necessary to do it this way!
+You can't create a function inside of an execution context! What gives?! How do you get off the ground with this?! This is where a sane person would live with the framework that others use even if it is obnoxious. I could keep using Boost tests, they work after all. I could instead avoid Boost by doing the dead simple, but ugly, thing and explicitly add each test call to `main.cpp`. 
 
-I did not accept defeat and now I know how to get around the execution context issue! After digging through the boost code I finally figured out what code is generated from this prototypical test case.
+I couldn't shake the thougt that "It's not necessary to do it this way!" I did not accept defeat and now I know how to get around the execution context issue! After digging through the boost code I finally figured out what code is generated from this prototypical test case.
 
 ```
 BOOST_AUTO_TEST_CASE(as_decimal_string_simple)
