@@ -6,13 +6,17 @@ Notes for my future self.
 
 ### How do you compile and run?
 
-On macos the command line tool for c++ is called `clang++` and the command `c++` is an alias. In general on a linux system `g++` is the tool to compile c++. You may also use `gcc` on a linux system if you include the flag `-lstdc++`.
+On macos the command line tool for c++ is called `clang++` and the command `c++` is an alias. In general on a linux system `g++` is the tool to compile c++. You may also use the more generic c compiler, `gcc`, on a linux system if you include the flag `-lstdc++`.
 
 Source files in c++ end with `.cpp`. Here's how you write, compile, and execute such a file.
 
-The entry point of a c++ project is a method called `main`, which returns an int and accepts two arguments. The first argument is an integer `argc`, which is the argument count. The second argument is an array of character pointers `argv`, which is the arguments vector. Functions in general may be declared as `<return type> <function name>()` regardless of their arguments. This is the typically how the `main` method is written when a program is intended to be run with out command line arguments. The program terminates in a success state if `main` returns 0 and in an error state otherwise.
+The entry point of a c++ project is a method called `main`, which returns an int and accepts two arguments. The program terminates in a success state if `main` returns 0 and in an error state otherwise.
 
-The `std::cout` command, which is in the `iostream` library, prints to the console so that is part of the prototypical "Hello, world!" program. The `std::endl` command from the same library returns the environment-specific newline character, so we will use that as well.
+> Note
+> 
+> The first argument is an integer `argc`, which is the argument count. The second argument is an array of character pointers `argv`, which is the arguments vector. Functions in general may be declared as `<return type> <function name>()` regardless of their arguments. This is typically how the `main` method is written when a program is intended to be run with out command line arguments.
+
+The `std::cout` command, which is in the `iostream` library, prints to the console by default. I will use this to write the prototypical "Hello, world!" program. The `std::endl` command from the same library returns the environment-specific newline character, so we will use that as well.
 
 Create a file called `main.cpp` and open it in a text editor. Write the following in that file.
 
@@ -20,23 +24,23 @@ Create a file called `main.cpp` and open it in a text editor. Write the followin
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, world!" << std::endl;
-    return 0;
+  std::cout << "Hello, world!" << std::endl;
+  return 0;
 }
 
 ```
 
 To compile such a file and output the result to an executable run 
 ```bash
-%g++ <source file name>.cpp -o <output file name>
+%g++ main.cpp -o output_file
 ```
 to use the specific c++ compiler or
 ```bash
-%gcc <source file name>.cpp -lstdc++ -o <output file name>
+%gcc main.cpp -lstdc++ -o output_file
 ```
 to use the more general purpose c compiler. *Importantly, anything that uses the -l... flag must come after the list of .cpp files.*
 
-This command will create an executable file at `%./<output file name>`. The flag `-std` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
+This command will create an executable file at `./output_file`. The flag `-std` tells the compiler to use a specific version of c++ during compilation. The latest version of c++ is 20 (at time of writing, with version 23 in development) so this is the version of c++ we will specify.
 
 Now run `%g++ -std=c++20 main.cpp -o ./hello` and notice that there is a new file called `hello` in your working directory. Execute this file.
 
@@ -58,7 +62,7 @@ Create a header file at `./include/hello.hpp` and give it the following content.
 #define HELLO_FUN
 
 namespace hello {
-    void say_hello();
+  void say_hello();
 }
 
 #endif
@@ -71,7 +75,7 @@ Create a code file at `./src/hello.cpp` and give it the following content.
 #include "hello.hpp"
 
 void hello::say_hello() {
-    std::cout << "Hello, world!" << std::endl;
+  std::cout << "Hello, world!" << std::endl;
 }
 
 ```
@@ -82,15 +86,15 @@ Modify your `main.cpp` file to look like
 #include "hello.hpp"
 
 int main() {
-    hello::say_hello();
-    return 0;
+  hello::say_hello();
+  return 0;
 }
 
 ```
 
 Putting this all together, we will specify `./include` as an include path, `c++20` as the compiler version, `./src/hello.cpp` and `./main.cpp` as source files, and `./import_test` as the resulting executable.
 
-```zsh
+```bash
 % g++ -std=c++20 -I./include src/hello.cpp main.cpp -o ./import_test
 % ./import_test 
 Hello, world!
@@ -170,7 +174,7 @@ int * d = &c;
 
 In this example the `*b == -43`, `*d == -43`, and `*b == *d`, but `b != d`. Likewise `a == -43`, `c == -43`, and `a == c`, but `&a != &c`. The values of `&a`, `b`, `&c`, and `d` are all addresses in memory that appear as integer-like values that represent the byte's physical order in all of the program's available memory.
 
-Since each pointer is associated with a data type and all of these types have a specific number or bytes assigned to their values, there is a handy way to point to the value of the next instance of that type in memory. For example suppose the characters `char w = 'F'; char x = 'o'; char y = 'o'; char z = 'd';` are stored in adjacent bytes and suppose that `char * word = &w`. Then `*word == 'F'`, `*(word + 1) == 'o'`, `*(word + 2) == 'o'`, and `*(word + 3) == 'd'`.
+Since each pointer is associated with a data type and all of these types have a specific number or bytes assigned to their values, there is a handy way to point to the value of the next instance of that type in memory. For example suppose the characters `char w = 'F', x = 'o', y = 'o', z = 'd', e = '\0;` are stored in adjacent bytes and suppose that `char * word = &w`. Then `*word == 'F'`, `*(word + 1) == 'o'`, `*(word + 2) == 'o'`, `*(word + 3) == 'd'`, and `*(word + 4) == '\0'`. The character `'\0'` is the standard way to mark the end of a string in c.
 
 When a type is assigned multiple bytes, these bytes are always contiguous. For example suppose that `int a{0x3f2e};` and `int b{0xc019};` are stored in adjacent blocks of memory. The variable `a` takes up four bytes and `b` takes up the subsequent four bytes. The pointer `int * c = &a;` knows that it a pointer to objects of type `int`, so `c + 1` points to the address four bytes after `c`. Therefore `*(c + 1) == b == 0xc019`.
 
@@ -178,16 +182,24 @@ When a type is assigned multiple bytes, these bytes are always contiguous. For e
 
 ### Declaration syntax
 
-A function is declared with a return type and a collection of arguments. This is a function that returns the first index of the given character in the given string or -1 if the character is missing.
+A function is declared with a return type and a collection of arguments. For example a function could appear in a header as the following.
 
 ```c++
-int index_of(char a[], unsigned short length, char b) {
-    for (int i = 0; i < length; i++) {
-        if (a[i] == b) {
-            return i;
-        }
+int index_of(char *, char);
+```
+
+This function takes a character pointer (a c string) and a character as arguments and returns an integer. The following implements this as a function that returns the first index of the given character in the given string or -1 if the character is missing.
+
+```c++
+int index_of(char *a, char b) {
+  int i = 0;
+  while (*(a + i) != '\0') {
+    if (*(a + i) == b) {
+      return i;
     }
-    return -1;
+    i++;
+  }
+  return -1;
 }
 ```
 
@@ -196,19 +208,22 @@ int index_of(char a[], unsigned short length, char b) {
 It is also possible to overload functions with the same name. The following pair of methods will expose a method that behaves identically to the one above but adds another where you can specify the index where you should start searching for the given character.
 
 ```c++
-int index_of(char a[], unsigned short length, char b, unsigned short from) {
-    for (unsigned short i = from; i < length; i++) {
-        if (a[i] == b) {
-            return i;
-        }
+int index_of(char *a, char b, unsigned short from) {
+  while (*(a + from) != '\0') {
+    if (*(a + from) == b) {
+      return from;
     }
-    return -1;
+    from++;
+  }
+  return -1;
 }
 
-int index_of(char a[], unsigned short length, char b) {
-    return index_of(a, length, b, 0);
+int index_of(char *a, char b) {
+  return index_of(a, b, 0);
 }
 ```
+
+Note that this function modifies the `from` argument as part of its operations. This will not affect any variables that are passed in because function arguments are copied by default when a function is executed.
 
 ### Parameters by reference
 
@@ -223,8 +238,8 @@ If the process of copying one of your arguments is unacceptably time consuming o
 
 ```c++
 int pure_double(int a) {
-    a *= 2;
-    return a;
+  a *= 2;
+  return a;
 }
 ```
 
@@ -232,7 +247,7 @@ The `destructive_double` function will *update* the first argument to a number t
 
 ```c++
 void destructive_double(int& a) {
-    a *= 2;
+  a *= 2;
 }
 ```
 
@@ -268,8 +283,8 @@ A Data Structure or `struct` is a compound data structure that is somewhat of a 
 
 ```c++
 struct rectangle {
-    unsigned int width;
-    unsigned int height;
+  unsigned int width;
+  unsigned int height;
 };
 ```
 
@@ -277,7 +292,7 @@ You could use this struct to define an area function.
 
 ```c++
 unsigned long area(rectangle rect) {
-    return ((unsigned long) rect.width) * ((unsigned long) rect.height);
+  return ((unsigned long) rect.width) * ((unsigned long) rect.height);
 }
 
 rectangle figure1;
@@ -291,12 +306,12 @@ Data structures may also have constructors.
 
 ```c++
 struct rectangle {
-    unsigned int width;
-    unsigned int height;
-    rectangle(unsigned int w, unsigned int h) {
-        width = w;
-        height = h;
-    }
+  unsigned int width;
+  unsigned int height;
+  rectangle(unsigned int w, unsigned int h) {
+    width = w;
+    height = h;
+  }
 }
 ```
 
@@ -304,9 +319,9 @@ You may also initialize each parameter by reference as part of a constructor.
 
 ```c++
 struct rectangle {
-    unsigned int width;
-    unsigned int height;
-    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
+  unsigned int width;
+  unsigned int height;
+  rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
 };
 ```
 
@@ -314,13 +329,13 @@ The parameters of a data structure are public by default, so it is possible to r
 
 ```c++
 struct rectangle {
-    unsigned int width;
-    unsigned int height;
-    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
+  unsigned int width;
+  unsigned int height;
+  rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
 };
 
 unsigned long rectangle_area(rectangle r) {
-    return r.height * r.width;
+  return r.height * r.width;
 }
 
 ```
@@ -329,14 +344,14 @@ A struct may also have an attribute that is a function.
 
 ```c++
 struct rectangle {
-    unsigned int width;
-    unsigned int height;
-    unsigned long area();
-    rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
+  unsigned int width;
+  unsigned int height;
+  unsigned long area();
+  rectangle(unsigned int width, unsigned int height): width{width}, height{height} {}
 };
 
 unsigned long rectangle::area() {
-    return height * width;
+  return height * width;
 }
 
 ```
@@ -351,19 +366,19 @@ Classes are practically the same as structs but their members are private by def
 
 ```c++
 class Vehicle {
-    unsigned int vin;
-    int x;
-    int y;
+  unsigned int vin;
+  int x;
+  int y;
 protected:
-    bool move(int a, int b) {
-        x += a;
-        y += b;
-    }
+  bool move(int a, int b) {
+    x += a;
+    y += b;
+  }
 public:
-    Vehicle(int x, int y, unsigned int vin): x{x}, y{y}, vin{vin} {}
-    int distance() {
-        return abs(y) + abs(x);
-    }
+  Vehicle(int x, int y, unsigned int vin): x{x}, y{y}, vin{vin} {}
+  int distance() {
+    return abs(y) + abs(x);
+  }
 };
 ```
 
@@ -375,12 +390,12 @@ The `friend` keyword is used in a lot of "operator override" methods. For exampl
 
 ```c++
 class Vehicle {
-    ...
+  ...
 public:
-    ...
-    friend bool operator==(const Vehicle& v1, const Vehicle& v2) {
-        return v1.vin == v2.vin;
-    }
+  ...
+  friend bool operator==(const Vehicle& v1, const Vehicle& v2) {
+    return v1.vin == v2.vin;
+  }
 };
 ```
 
@@ -390,19 +405,19 @@ Now the `==` operator will only check that the `vin` on two `Vehicle`s are the s
 #include <iostream>
 
 int main() {
-    Vehicle v1(37, 18, 123456), v2(-84, 22, 654321), v3(-84, 22, 123456);
+  Vehicle v1(37, 18, 123456), v2(-84, 22, 654321), v3(-84, 22, 123456);
 
-    std::cout << "v1 == v2 is " << (v1 == v2) << std::endl;
-    std::cout << "v1 == v3 is " << (v1 == v3) << std::endl;
-    std::cout << "v2 == v3 is " << (v2 == v3) << std::endl;
-    return 0;
+  std::cout << "v1 == v2 is " << (v1 == v2) << std::endl;
+  std::cout << "v1 == v3 is " << (v1 == v3) << std::endl;
+  std::cout << "v2 == v3 is " << (v2 == v3) << std::endl;
+  return 0;
 }
 ```
 
 This code will produce the following.
 
 ```sh
-% /usr/bin/clang++ -std=c++20 ./main.cpp -o ./build/main
+% g++ -std=c++20 ./main.cpp -o ./build/main
 % ./build/main
 v1 == v2 is 0
 v1 == v3 is 1
@@ -441,10 +456,10 @@ Let's consider this innocent looking class specification. It has a private chara
 
 ```c++
 class MyExampleClass {
-    char content[];
+  char content[];
 public:
-    MyExampleClass(char in[]);
-    int content_length();
+  MyExampleClass(char []);
+  int content_length(void);
 };
 ```
 
@@ -452,7 +467,7 @@ In programming languages like JavaScript, Python, or Java it would be trivial to
 
 ```c++
 MyExampleClass::MyExampleClass(char in[]) {
-    content = in;
+  content = in;
 }
 ```
 
@@ -460,10 +475,12 @@ This does not compile and the compiler shows this error.
 
 ```terminal
 error: array type 'char[]' is not assignable
-    content = in;
+  content = in;
 ```
 
 That's curious. The trouble is that every type in c takes up a fixed amount of memory. The memory that is allocated to an array depends on the number of elements in said array. In this instance the parameter `int content[];` is actually a pointer `int *content;` and it points to the location in memory where the first element of `char in[]` is stored. The type `char in[]` isn't really a type, since it can have an arbitrary size itself. You can only assign a fixed length character array, such as `char in[256]`, which allocates 256 consecutive locations in memory for values of type `char`.
+
+We'll continue this discussion and get into how to manage pointers in classes further on.
 
 ### Standard libraries
 
@@ -508,10 +525,10 @@ The `<exception>` class has a virtual method `const char *std::exception::what()
 
 ```c++
 try {
-    //... do stuff
+  //... do stuff
 } catch(FooException fooEx) {
-    std::cout << fooEx.what() << std::endl;
-    handle_foo();
+  std::cout << fooEx.what() << std::endl;
+  handle_foo();
 }
 ```
 
@@ -519,9 +536,9 @@ When a `catch` block contains an ellipsis, it will catch anything.
 
 ```c++
 try {
-    // ... do stuff
+  // ... do stuff
 } catch (...) {
-    std::cout << "Something was thrown." << std::endl;
+  std::cout << "Something was thrown." << std::endl;
 }
 ```
 
@@ -559,13 +576,282 @@ The following example shows an implementation of a decorator that writes executi
 #include <chrono>
 
 unsigned long exec_with_time(unsigned long (*base)(unsigned short), std::ostream& out, unsigned short arg) {
-    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-    unsigned long result = (*base)(arg);
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    out << chrono::duration<long, std::nano>(end - start).count() << "ns";
-    return result;
+  std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+  unsigned long result = (*base)(arg);
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  out << chrono::duration<long, std::nano>(end - start).count() << "ns";
+  return result;
 }
 ```
+
+## Managing pointers and memory in classes
+
+### Pointers as class parameters
+
+It's possible to use a c string as a class parameter if you try the following.
+
+```c++
+class MyExampleClass {
+  const char *content;
+public:
+  MyExampleClass(const char *);
+  int content_length(void);
+  void print(void);
+};
+```
+
+Let's implement this constructor and method in the following way.
+
+```c++
+MyExampleClass::MyExampleClass(const char *in) {
+  content = in;
+}
+int MyExampleClass::content_length() {
+  int length = 0;
+  while (content[length++] != '\0') {
+    length++;
+  }
+  return length;
+}
+void MyExampleClass::print() {
+  std::cout << content << std::endl;
+}
+
+int main() {
+  MyExampleClass instance{"Text content"};
+  std::cout << "This example instance is " << instance.content_length() << " characters long." << std::endl;
+  instance.print();
+}
+```
+
+This compiles and has the expected console output.
+
+> This example instance is 13 characters long.\
+> Text content
+
+The above works because strings such as "Text content" have the type `const char *`. What if we want to enhance the above class to have a `void append(const char *);` method? Since `content` is a const, we can't update it. How could we manage that? Let's try removing the `const` so that we have this declaration.
+
+```c++
+class MyExampleClass {
+  char *content;
+public:
+  MyExampleClass(const char *);
+  int content_length(void);
+  void print(void);
+  void append(const char *);
+};
+```
+
+Now the constructor won't compile because the types of `content` and `in` don't match. Let's try initializing the contents as a character array and copying the constructor argument into that. Also let's extract the helper function to find the length of a string so that it can be re-used
+
+```c++
+int length_of(const char *);
+int length_of(char *);
+```
+
+Here is a seemingly logical constructor for this class.
+
+```c++
+MyExampleClass::MyExampleClass(const char *in) {
+  int len = length_of(in), i;
+  char temp[len + 1];
+  
+  for (i = 0; i <= len; i++) {
+  temp[i] = in[i];
+  }
+  content = temp;
+}
+```
+
+It will compile, but then the following `main` method will print nonsense.
+
+```c++
+int main() {
+  MyExampleClass instance{"Text content"};
+  std::cout << "This example instance is " << instance.content_length() << " characters long." << std::endl;
+  instance.print();
+  return 0;
+}
+```
+
+> This example instance is 0 characters long.\
+`'?�&
+
+The problem now is that `char temp[len + 1];` only preserves its block of memory while the constructor method is executing and then that memory is freed. This makes `content` a pointer to a block of memory that could contain anything. In order to persist this block of memory we need to be more heavy-handed. This is where we need to tread carefully. Once we persist some block of memory explicitly we need to take care to free that memory later to avoid memory leaks.
+
+Here is a constructor that reserves the relevant block of memory.
+
+```c++
+MyExampleClass::MyExampleClass(const char *in) {
+  int len = length_of(in), i;
+  content = new char[len + 1];
+  
+  for (i = 0; i <= len; i++) {
+  content[i] = in[i];
+  }
+}
+```
+
+Now running the `main` method has the expected output.
+
+> This example instance is 12 characters long.\
+Text content
+
+How do we address the memory that was allocated to `content` now? There is a corresponding `delete[] content;` commant, which deallocates this memory. We can also declare a destructor method to call this deallocate method. That seems simple enough, but it leads to its own trouble. Let's add that destructor method and then see what happens when we use this class as a function argument. All together here is an example main.cpp file.
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+int length_of(const char *);
+int length_of(char *);
+
+class MyExampleClass {
+  char *content;
+public:
+  MyExampleClass(const char *);
+  ~MyExampleClass();
+  int content_length(void);
+  void print(void);
+};
+void print_class_info(MyExampleClass);
+
+int main() {
+  MyExampleClass instance{"Text content"};
+  print_class_info(instance);
+  return 0;
+}
+
+MyExampleClass::MyExampleClass(const char *in) {
+  int len = length_of(in), i;
+  content = new char[len + 1];
+  
+  for (i = 0; i <= len; i++) {
+  content[i] = in[i];
+  }
+}
+// Destructor example
+MyExampleClass::~MyExampleClass() {
+  delete[] content;
+}
+int MyExampleClass::content_length() {
+  return length_of(content);
+}
+void MyExampleClass::print() {
+  std::cout << content << std::endl;
+}
+
+void print_class_info(MyExampleClass instance) {
+  std::cout << "This example instance is " << instance.content_length() << " characters long." << std::endl;
+  instance.print();
+}
+
+int length_of(const char *string) {
+  int result = 0;
+  while (string[result] != '\0') {
+  result++;
+  }
+  return result;
+}
+
+int length_of(char *string) {
+  int result = 0;
+  while (string[result] != '\0') {
+  result++;
+  }
+  return result;
+}
+```
+
+This code will compile and run. It will even print the expected output. However it trhows an exception after the call to `print_class_info`.
+
+> This example instance is 12 characters long.\
+Text content\
+free(): double free detected in tcache 2
+
+That's a problem that arrises because the destructor is called when the underlying `content` is already deallocated. To test this, let's see what happens when we try to print the contents again after the method call resolves.
+
+```c++
+int main() {
+  MyExampleClass instance{"Text content"};
+  print_class_info(instance);
+  instance.print();
+  return 0;
+}
+```
+
+> This example instance is 12 characters long.\
+Text content\
+�<�d\
+free(): double free detected in tcache 2
+
+How could we address this? The issue arrises because `void print_class_info(MyExampleClass);` references the example class *by value* and implicitly calls the `MyExampleClass::MyExampleClass(MyExampleClass&)` constructor, which has a default implementation that copies the value of `content` into a new class instance. We will need to instead create a new `content` for the new copy of the class in this constructor. Add this constructor implementation and restore the `main` method to its former content.
+
+```c++
+class MyExampleClass {
+  ...
+public:
+  ...
+  MyExampleClass(MyExampleClass&);
+  ...
+};
+...
+MyExampleClass::MyExampleClass(MyExampleClass& other) {
+  int len = other.content_length(), i;
+  content = new char[len + 1];
+  for (i = 0; i <= len; i++) {
+    content[i] = other.content[i];
+  }
+}
+```
+
+Finally this allows the example class to have an append method to update the contents.
+
+```c++
+class MyExampleClass {
+  char *content;
+public:
+  MyExampleClass(const char *);
+  MyExampleClass(MyExampleClass&);
+  ~MyExampleClass();
+  int content_length(void);
+  void print(void);
+  void append(const char *);
+};
+...
+int main() {
+  MyExampleClass instance{"Text content"};
+  print_class_info(instance);
+  instance.append(" with the appended text.");
+  print_class_info(instance);
+  return 0;
+}
+...
+void MyExampleClass::append(const char *in) {
+  int length = content_length(), new_length, cursor;
+  new_length = length + length_of(in);
+  char *new_content = new char[new_length + 1];
+  for (cursor = 0; cursor <= new_length; cursor++) {
+    if (cursor < length) {
+      new_content[cursor] = content[cursor];
+    } else {
+      new_content[cursor] = in[cursor - length];
+    }
+  }
+  delete[] content;
+  content = new_content;
+}
+```
+
+This now prints the following.
+
+> This example instance is 12 characters long.\
+Text content\
+This example instance is 36 characters long.\
+Text content with the appended text.
+
+The example class demonstrates this specific issue with memory management, but there are other implicit ways to initialize a class such as `MyExampleClass instance = other_instance;`. If you manually manage memory, you will need to take extreme care to make sure that all of these operations properly manage allocating and deallocating memory. It is generally best to use the `std::string` class to manage variable length strings as parameters in classes.
 
 ## Preprocessors
 
@@ -589,32 +875,32 @@ In desperation, I tried writing code that would just call the static register me
 using namespace std;
 
 namespace wtf {
-    class Runner {
-        void (*runnable)();
-    public:
-        Runner(): runnable{nullptr} {};
-        void run() {
-            if (runnable != nullptr) {
-                cout << "About to run test." << endl;
-                (*runnable)();
-                cout << "Completed running test." << endl;
-            }
-        }
-        void reg(void (*r)()) {
-            runnable = r;
-        }
-    } runner;
-
-    void my_test();
-    void my_test() {
-        cout << "My test is running." << endl;
+  class Runner {
+    void (*runnable)();
+  public:
+    Runner(): runnable{nullptr} {};
+    void run() {
+      if (runnable != nullptr) {
+        cout << "About to run test." << endl;
+        (*runnable)();
+        cout << "Completed running test." << endl;
+      }
     }
+    void reg(void (*r)()) {
+      runnable = r;
+    }
+  } runner;
+
+  void my_test();
+  void my_test() {
+    cout << "My test is running." << endl;
+  }
 }
 
 int main() {
-    wtf::runner.reg(&wtf::my_test);
-    wtf::runner.run();
-    return 0;
+  wtf::runner.reg(&wtf::my_test);
+  wtf::runner.run();
+  return 0;
 }
 ```
 
@@ -638,17 +924,17 @@ If you're generating that function name in a macro, it will be inaccessible from
 using namespace std;
 
 namespace wtf {
-    ...
-    void my_test();
-    runner.reg(&my_test);
-    void my_test() {
-        cout << "My test is running." << endl;
-    }
+  ...
+  void my_test();
+  runner.reg(&my_test);
+  void my_test() {
+    cout << "My test is running." << endl;
+  }
 }
 
 int main() {
-    wtf::runner.run();
-    return 0;
+  wtf::runner.run();
+  return 0;
 }
 ```
 
@@ -657,15 +943,15 @@ When `./explore.cpp` contains this code, the compiler shows an error.
 ```sh
 % /usr/bin/g++ -std=c++20 ./explore.cpp -o ./build/explore
 ./explore.cpp:23:5: error: unknown type name 'runner'; did you mean 'Runner'?
-    runner.reg(&my_test);
-    ^~~~~~
-    Runner
+  runner.reg(&my_test);
+  ^~~~~~
+  Runner
 ./explore.cpp:6:11: note: 'Runner' declared here
-    class Runner {
-          ^
+  class Runner {
+      ^
 ./explore.cpp:23:11: error: cannot use dot operator on a type
-    runner.reg(&my_test);
-          ^
+  runner.reg(&my_test);
+      ^
 2 errors generated.
 ```
 
@@ -677,20 +963,20 @@ You can't execute functions outside of an execution context! Ok, what if I give 
 using namespace std;
 
 namespace wtf {
-    ...
-    void register_all() {
-        void my_test();
-        runner.reg(&my_test);
-        void my_test() {
-            cout << "My test is running." << endl;
-        }
+  ...
+  void register_all() {
+    void my_test();
+    runner.reg(&my_test);
+    void my_test() {
+      cout << "My test is running." << endl;
     }
+  }
 }
 
 int main() {
-    wtf::register_all();
-    wtf::runner.run();
-    return 0;
+  wtf::register_all();
+  wtf::runner.run();
+  return 0;
 }
 ```
 
@@ -699,8 +985,8 @@ Now we see the problem the other way.
 ```sh
 % /usr/bin/clang++ -std=c++20 ./explore.cpp -o ./build/explore
 ./explore.cpp:25:24: error: function definition is not allowed here
-        void my_test() {
-                       ^
+    void my_test() {
+             ^
 1 error generated.
 ```
 
@@ -720,7 +1006,7 @@ The auto test macro has this declaration.
 
 ```
 #define BOOST_AUTO_TEST_CASE( test_name )               \
-    BOOST_AUTO_TEST_CASE_NO_DECOR( test_name )          \
+  BOOST_AUTO_TEST_CASE_NO_DECOR( test_name )          \
 /**/
 ```
 
@@ -728,8 +1014,8 @@ And the next macro...
 
 ```
 #define BOOST_AUTO_TEST_CASE_NO_DECOR( test_name )     \
-    BOOST_FIXTURE_TEST_CASE_NO_DECOR( test_name,       \
-        BOOST_AUTO_TEST_CASE_FIXTURE )                 \
+  BOOST_FIXTURE_TEST_CASE_NO_DECOR( test_name,       \
+    BOOST_AUTO_TEST_CASE_FIXTURE )                 \
 /**/
 ```
 
@@ -738,7 +1024,7 @@ And the next (ignoring `BOOST_AUTO_TEST_CASE_FIXTURE` since it is a filler at th
 ```
 #define BOOST_FIXTURE_TEST_CASE_NO_DECOR( test_name, F )   \
 BOOST_FIXTURE_TEST_CASE_WITH_DECOR( test_name, F,          \
-    boost::unit_test::decorator::collector_t::instance() ) \
+  boost::unit_test::decorator::collector_t::instance() ) \
 /**/
 ```
 
@@ -747,28 +1033,28 @@ And now the real one...
 ```
 #define BOOST_FIXTURE_TEST_CASE_WITH_DECOR( test_name, F, decorators )  \
 struct test_name : public F { void test_method(); };                    \
-                                                                        \
+                                    \
 static void BOOST_AUTO_TC_INVOKER( test_name )()                        \
 {                                                                       \
-    BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture ctor");      \
-    test_name t;                                                        \
-    BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture setup");     \
-    boost::unit_test::setup_conditional(t);                             \
-    BOOST_TEST_CHECKPOINT('"' << #test_name << "\" test entry");        \
-    t.test_method();                                                    \
-    BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture teardown");  \
-    boost::unit_test::teardown_conditional(t);                          \
-    BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture dtor");      \
+  BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture ctor");      \
+  test_name t;                                                        \
+  BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture setup");     \
+  boost::unit_test::setup_conditional(t);                             \
+  BOOST_TEST_CHECKPOINT('"' << #test_name << "\" test entry");        \
+  t.test_method();                                                    \
+  BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture teardown");  \
+  boost::unit_test::teardown_conditional(t);                          \
+  BOOST_TEST_CHECKPOINT('"' << #test_name << "\" fixture dtor");      \
 }                                                                       \
-                                                                        \
+                                    \
 struct BOOST_AUTO_TC_UNIQUE_ID( test_name ) {};                         \
-                                                                        \
+                                    \
 BOOST_AUTO_TU_REGISTRAR( test_name )(                                   \
-    boost::unit_test::make_test_case(                                   \
-        &BOOST_AUTO_TC_INVOKER( test_name ),                            \
-        #test_name, __FILE__, __LINE__ ),                               \
-        decorators );                                                   \
-                                                                        \
+  boost::unit_test::make_test_case(                                   \
+    &BOOST_AUTO_TC_INVOKER( test_name ),                            \
+    #test_name, __FILE__, __LINE__ ),                               \
+    decorators );                                                   \
+                                    \
 void test_name::test_method()                                           \
 /**/
 ```
@@ -786,10 +1072,10 @@ And this one is used several times.
 
 ```
 #define BOOST_TEST_CHECKPOINT( M )                              \
-    ::boost::unit_test::unit_test_log.set_checkpoint(           \
-        BOOST_TEST_L(__FILE__),                                 \
-        static_cast<std::size_t>(__LINE__),                     \
-        (::boost::wrap_stringstream().ref() << M).str() )
+  ::boost::unit_test::unit_test_log.set_checkpoint(           \
+    BOOST_TEST_L(__FILE__),                                 \
+    static_cast<std::size_t>(__LINE__),                     \
+    (::boost::wrap_stringstream().ref() << M).str() )
 #define BOOST_TEST_L( s )         ::boost::unit_test::const_string( s, sizeof( s ) - 1 )
 // '"' << #test_name << "\" fixture ctor" -> 
 //          ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 55, "\"as_decimal_string_simple\" fixture ctor" )
@@ -810,24 +1096,24 @@ struct as_decimal_string_simple : public BOOST_AUTO_TEST_CASE_FIXTURE { void tes
 
 static void as_decimal_string_simple_invoker()
 {
-    ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture ctor" );
-    as_decimal_string_simple t;
-    ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture setup" );
-    boost::unit_test::setup_conditional(t);
-    ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture entry" );
-    t.test_method();
-    ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture teardown");
-    boost::unit_test::teardown_conditional(t);
-    ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture dtor");
+  ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture ctor" );
+  as_decimal_string_simple t;
+  ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture setup" );
+  boost::unit_test::setup_conditional(t);
+  ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture entry" );
+  t.test_method();
+  ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture teardown");
+  boost::unit_test::teardown_conditional(t);
+  ::boost::unit_test::unit_test_log.set_checkpoint("testFile.cpp", 53, "\"as_decimal_string_simple\" fixture dtor");
 }
-                                                   
+                           
 struct as_decimal_string_simple_id {};
 
 BOOST_AUTO_TU_REGISTRAR( test_name )(
-    boost::unit_test::make_test_case(
-        &as_decimal_string_simple_invoker,
-        "as_decimal_string_simple", "testFile.cpp", 53 ),
-        boost::unit_test::decorator::collector_t::instance() );
+  boost::unit_test::make_test_case(
+    &as_decimal_string_simple_invoker,
+    "as_decimal_string_simple", "testFile.cpp", 53 ),
+    boost::unit_test::decorator::collector_t::instance() );
 
 void as_decimal_string_simple::test_method()
 {
@@ -857,7 +1143,7 @@ It turns out that...is another empty struct, but it has a number of overloaded c
 ```
 auto_test_unit_registrar::auto_test_unit_registrar( boost::shared_ptr<test_unit_generator> tc_gen, decorator::collector_t& decorators )
 {
-    framework::current_auto_test_suite().add( tc_gen, decorators );
+  framework::current_auto_test_suite().add( tc_gen, decorators );
 }
 ```
 
@@ -872,23 +1158,23 @@ Now let's see how my implementation could work.
 using namespace std;
 
 namespace wtf {
-    ...
-    struct cheater_struct {
-        cheater_struct(void (*runnable)()) {
-            runner.reg(runnable);
-        }
-    };
-
-    void my_test();
-    cheater_struct my_test_registrar(&my_test);
-    void my_test() {
-        cout << "My test is running." << endl;
+  ...
+  struct cheater_struct {
+    cheater_struct(void (*runnable)()) {
+      runner.reg(runnable);
     }
+  };
+
+  void my_test();
+  cheater_struct my_test_registrar(&my_test);
+  void my_test() {
+    cout << "My test is running." << endl;
+  }
 }
 
 int main() {
-    wtf::runner.run();
-    return 0;
+  wtf::runner.run();
+  return 0;
 }
 ```
 
@@ -906,30 +1192,30 @@ Bam! It was that simple the whole time. Now let's just define `./include/Library
 using namespace std;
 
 namespace test {
-    class AssertionFailure: public exception {
-        string message;
-    public:
-        AssertionFailure(string message);
-        virtual const char * what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override;
-    };
-    
-    class Runner {
-        void (*runnable)();
-    public:
-        Runner(void (*runnable)());
-        Runner();
-        void run();
-    };
-    class TestModule {
-        static vector<Runner> runners;
-    public:
-        static void run_all();
-        static void reg(Runner);
-    };
+  class AssertionFailure: public exception {
+    string message;
+  public:
+    AssertionFailure(string message);
+    virtual const char * what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override;
+  };
+  
+  class Runner {
+    void (*runnable)();
+  public:
+    Runner(void (*runnable)());
+    Runner();
+    void run();
+  };
+  class TestModule {
+    static vector<Runner> runners;
+  public:
+    static void run_all();
+    static void reg(Runner);
+  };
 
-    struct cheater_struct {
-        cheater_struct(void (*runnable)());
-    };
+  struct cheater_struct {
+    cheater_struct(void (*runnable)());
+  };
 }
 
 #define TEST(name) \
@@ -951,38 +1237,38 @@ void name()
 using namespace std;
 
 namespace test {
-    AssertionFailure::AssertionFailure(string message): message{message} {};
-    const char * AssertionFailure::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW {
-        return message.c_str();
+  AssertionFailure::AssertionFailure(string message): message{message} {};
+  const char * AssertionFailure::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW {
+    return message.c_str();
+  }
+  
+  Runner::Runner(void (*runnable)()): runnable{runnable} {};
+  Runner::Runner(): Runner::Runner{nullptr} {}
+  void Runner::run() {
+    if (runnable != nullptr) {
+      cout << "About to run test." << endl;
+      try {
+        (*runnable)();
+      cout << "Completed running test." << endl;
+      } catch(AssertionFailure e) {
+        cerr << "Test failure: " << e.what() << endl;
+      }
     }
-    
-    Runner::Runner(void (*runnable)()): runnable{runnable} {};
-    Runner::Runner(): Runner::Runner{nullptr} {}
-    void Runner::run() {
-        if (runnable != nullptr) {
-            cout << "About to run test." << endl;
-            try {
-                (*runnable)();
-            cout << "Completed running test." << endl;
-            } catch(AssertionFailure e) {
-                cerr << "Test failure: " << e.what() << endl;
-            }
-        }
-    }
+  }
 
-    void TestModule::run_all() {
-        for (int i = 0; i < runners.size(); i++) {
-            runners[i].run();
-        }
+  void TestModule::run_all() {
+    for (int i = 0; i < runners.size(); i++) {
+      runners[i].run();
     }
-    void TestModule::reg(Runner runnable) {
-        runners.push_back(runnable);
-    }
+  }
+  void TestModule::reg(Runner runnable) {
+    runners.push_back(runnable);
+  }
 
-    cheater_struct::cheater_struct(void (*runnable)()) {
-        Runner next_runner(runnable);
-        TestModule::reg(next_runner);
-    }
+  cheater_struct::cheater_struct(void (*runnable)()) {
+    Runner next_runner(runnable);
+    TestModule::reg(next_runner);
+  }
 }
 ```
 
@@ -995,11 +1281,11 @@ using namespace test;
 using namespace std;
 
 TEST(this_fails) {
-    throw AssertionFailure("This didn't do the thing!");
+  throw AssertionFailure("This didn't do the thing!");
 }
 
 TEST(this_passes) {
-    cout << "This test ran!" << endl;
+  cout << "This test ran!" << endl;
 }
 
 ```
@@ -1012,7 +1298,7 @@ And then create a `./main.cpp`.
 using namespace test;
 
 int main() {
-    TestModule::run_all();
+  TestModule::run_all();
 }
 
 ```
