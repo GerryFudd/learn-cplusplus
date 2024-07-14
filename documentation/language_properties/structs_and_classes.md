@@ -147,7 +147,7 @@ v1 == v3 is 1
 v2 == v3 is 0
 ```
 
-There are many other operators that may be overridden. The `BigInt` class [that is implemented as an exercise in this repo](./include/math/BigInt.hpp) provides several examples of these.
+There are many other operators that may be overridden. The `BigInt` class [that is implemented as an exercise in this repo](../../include/math/BigInt.hpp) provides several examples of these.
 
 ```c++
 BigInt operator + (const BigInt&);
@@ -169,7 +169,89 @@ The operators `+ - * &` may also be overloaded as either unary or binary operato
 
 Operators such as `==` may be implemented as class methods, but take care that you should be consistent that such an operator should be a const method.
 
-### Virtual is the new abstract
-
 ### Class inheritance
 
+Here is an example of a parent class that inherits from a child class.
+
+```c++
+#include <string>
+#include <iostream>
+class Child {
+public:
+  void greet(std::string);
+};
+
+class Parent: public Child {
+public:
+  void greet_world(void);
+};
+
+void Child::greet(std::string name) {
+  std::cout << "Hello, " << name << std::endl;
+};
+void Parent::greet_world() {
+  greet("world");
+};
+```
+
+With those class implementations consider this main method.
+
+```c++
+int main() {
+  Parent p;
+
+  p.greet("Dave");
+  p.greet_world();
+
+  return 0;
+}
+```
+
+This main method will print the following.
+
+> Hello, Dave\
+Hello, world
+
+#### Virtual instead of abstract
+
+There isn't an explicit `interface` type in c. Instead classes may be declared with `virtual` methods to indicate that those methods aren't implemented on the base class. Such classes may instead be extended and the parent class must implement any `virtual` methods. In this way `virtual` methods in c behave like `abstract` methods on in java.
+
+An important example of this is the `std::exception` class that has the following method in its signature.
+
+```c++
+virtual const char* what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW;
+```
+
+Any proper exception class must provide an implementation. Here is an example that uses such an implementation of `exception`.
+
+```c++
+#include <iostream>
+#include <exception>
+#include <string>
+
+using namespace std;
+
+class EnrichedException: public exception {
+  string message;
+public:
+  EnrichedException(const char*);
+  virtual const char*
+    what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW;
+};
+
+int main() {
+    throw EnrichedException("This is an exception.");
+    return 0;
+}
+
+EnrichedException::EnrichedException(const char *message): message{string(message)} {}
+
+const char* EnrichedException::what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW {
+  return message.c_str();
+}
+```
+
+When this program is compiled and run it outputs the following logs.
+
+> terminate called after throwing an instance of 'EnrichedException'\
+>   what():  This is an exception.
