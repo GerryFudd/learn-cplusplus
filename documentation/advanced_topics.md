@@ -25,6 +25,8 @@ unsigned long exec_with_time(unsigned long (*base)(unsigned short), std::ostream
 
 ## What are arrays really?
 
+### Arrays as class parameters.
+
 Let's consider this innocent looking class specification. It has a private character array, a constructor that accepts a character array as a parameter, and it has a public method that returns the length of this array.
 
 ```c++
@@ -55,6 +57,19 @@ That's curious. The trouble is that every type in c takes up a fixed amount of m
 
 We'll continue this discussion and get into how to manage pointers in classes further on.
 
+### Nested arrays, arrays of pointers.
+
+The following is an array of 3 arrays of 5 integers.
+
+```c++
+int ex[3][5] {
+  { 2, 3, 5, 7, 11 },
+  { 13, 17, 19, 23, 29 },
+  { 31, 37, 41, 43, 47 }
+};
+```
+
+The contents of `ex` will take up 15 `int`s worth of storage, which is a total of 60 bytes. The value `ex[m][n]` is the integer located 4(5m+n) bytes after the beginning of this block in memory.
 
 ## Managing pointers and memory in classes
 
